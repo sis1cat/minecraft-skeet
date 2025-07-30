@@ -224,24 +224,6 @@ public class Rage extends Function implements IDefault {
             return;
         }
 
-        /*if(prevTickAttack == 1)
-            mc.gameMode.stopDestroyBlock();
-
-        if (prevTickAttack == 2) {
-
-            HitResult hitResult = RayTrace.getHitResult(0, 90, 3, 2);
-
-            if(hitResult instanceof BlockHitResult blockHitResult) {
-                mc.player.connection.send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockHitResult.getBlockPos(), blockHitResult.getDirection(), mc.level.getBlockStatePredictionHandler().currentSequence() + 1));
-                mc.player.swing(InteractionHand.MAIN_HAND);
-                mc.player.swing(InteractionHand.MAIN_HAND);
-            }
-
-        }
-
-        if(prevTickAttack > 0)
-            prevTickAttack--;*/
-
         startSettingUp();
 
         prevTarget = currentTarget;
@@ -329,18 +311,6 @@ public class Rage extends Function implements IDefault {
             controllerInputEvent.leftImpulse = closestImpulses[1];
         }
 
-    }
-
-    int changed = 0;
-
-    @EventTarget(value = Priority.LOWEST)
-    void _event2(ControllerInputEvent controllerInputEvent) {
-
-        /*if(!mc.player.wasGrounded)
-            controllerInputEvent.jumping = false;
-
-        if(mc.player.tickCount % 8 > 5 && !mc.player.wasGrounded)
-            controllerInputEvent.leftImpulse = 0;*/
     }
 
     private float[] getClosestImpulses(float xImpulse, float zImpulse) {
@@ -524,8 +494,6 @@ public class Rage extends Function implements IDefault {
         } else
             sendAttackPacket();
 
-        prevTickAttack = 2;
-
         if(canBacktrack())
             IDefault.displayClientChatMessage("  Tracked player at: " + (currentTarget.tickCount - getNearestBacktrack().timePoint()) + "t old AABB");
 
@@ -539,23 +507,6 @@ public class Rage extends Function implements IDefault {
 
         if (packetReceiveEvent.getPacket() instanceof ClientboundMoveEntityPacket clientboundMoveEntityPacket && clientboundMoveEntityPacket.getEntity(mc.level) == mc.player)
             mc.player.wasGrounded = clientboundMoveEntityPacket.isOnGround();
-
-    }
-
-    @EventTarget
-    private void event(PacketSendEvent packetSendEvent) {
-
-        if (mc.level == null || mc.player == null)
-            return;
-
-        if (packetSendEvent.getPacket() instanceof ServerboundMovePlayerPacket serverboundMovePlayerPacket)
-            mc.player.wasGrounded = serverboundMovePlayerPacket.isOnGround();
-
-        if(packetSendEvent.getPacket() instanceof ServerboundSwingPacket packet)
-            System.out.println(packet + " " + mc.player.tickCount);
-
-        if(packetSendEvent.getPacket() instanceof ServerboundPlayerActionPacket packet)
-            System.out.println(packet.getAction() + " " + mc.player.tickCount);
 
     }
 
