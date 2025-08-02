@@ -30,7 +30,7 @@ public class AttackOrder {
     private final static Minecraft mc = Minecraft.getInstance();
 
     public static void sendConditionalSwing(HitResult ray, InteractionHand enumHand) {
-        if (ray != null && ray.getType() != HitResult.Type.ENTITY) mc.player.swing(enumHand);
+        /*if (ray != null && ray.getType() != HitResult.Type.ENTITY) mc.player.swing(enumHand);*/
     }
 
     public static void sendFixedAttack(Player entityIn, Entity target) {
