@@ -1,9 +1,14 @@
 package sisicat.main.functions.movement;
 
 import com.darkmagician6.eventapi.EventTarget;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import sisicat.IDefault;
 import sisicat.events.ControllerInputEvent;
 import sisicat.events.MovementUpdateEvent;
+import sisicat.events.TickEvent;
 import sisicat.main.functions.Function;
 
 public class AutomaticElytraJump extends Function {
@@ -13,20 +18,23 @@ public class AutomaticElytraJump extends Function {
     }
 
     @EventTarget
-    void _event(MovementUpdateEvent ignored){
+    void _event(TickEvent ignored) {
 
-        if(mc.player == null || mc.player.getInventory().getItem(38).getItem() != Items.ELYTRA || mc.player.getAbilities().flying)
+        ItemStack elytraItemStack = mc.player.getInventory().getItem(38);
+
+        if(elytraItemStack.getItem() != Items.ELYTRA || mc.player.getAbilities().flying || (elytraItemStack.getDamageValue() == elytraItemStack.getMaxDamage() - 1))
             return;
 
-        if(mc.player.input.keyPresses.jump())
-            mc.player.input.stopJump();
+        mc.player.input.stopJump();
 
     }
 
     @EventTarget
     void event(ControllerInputEvent controllerInputEvent) {
 
-        if(mc.player.getInventory().getItem(38).getItem() != Items.ELYTRA || mc.player.getAbilities().flying)
+        ItemStack elytraItemStack = mc.player.getInventory().getItem(38);
+
+        if(elytraItemStack.getItem() != Items.ELYTRA || mc.player.getAbilities().flying || (elytraItemStack.getDamageValue() == elytraItemStack.getMaxDamage() - 1))
             return;
 
         controllerInputEvent.jumping = true;

@@ -19,7 +19,6 @@ import sisicat.main.utilities.Text;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 public class Group extends Widget {
 
@@ -79,7 +78,7 @@ public class Group extends Widget {
 
         drawElements(x, y, gameWindowSize);
 
-        Text.getMenuBoldFont().renderTextWithShadow(groupName, x + 12, y - (int)((float) Text.getMenuBoldFont().getFontHeight() / 2), isDragging ? themeColor : Color.c205);
+        Text.getMenuBoldFont().renderTextWithShadow(groupName, x + 12, y - (int)((float) Text.getMenuBoldFont().getBaseAscender() / 2), isDragging ? themeColor : Color.c205);
 
     }
 

@@ -74,13 +74,13 @@ public class Combo extends Widget {
 
         if(!text.isEmpty()) {
             Text.getMenuFont().renderText(text, x + Math.round(20 * Window.windowScale), y, Color.c205);
-            occupiedSpace += Text.getMenuFont().getFontHeight() + Math.round(4 * Window.windowScale);
+            occupiedSpace += Text.getMenuFont().getBaseAscender() + Math.round(4 * Window.windowScale);
         }
 
         width = Math.min(Math.max(groupWidth - Math.round(100 * Window.windowScale), minWidgetWidth), maxWidgetWidth);
 
         this.x = x + Math.round(20 * Window.windowScale);
-        this.y = y + (text.isEmpty() ? 0 : Math.round(4 * Window.windowScale) + Text.getMenuFont().getFontHeight());
+        this.y = y + (text.isEmpty() ? 0 : Math.round(4 * Window.windowScale) + Text.getMenuFont().getBaseAscender());
 
         if(isWidgetHovered)
             Window.isAnyInteractableHovered = true;

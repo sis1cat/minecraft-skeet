@@ -270,7 +270,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
     public Animation yAABBSizeAnimation = new Animation();
     public ArrayList<PlayerESPFunction.PlayerProperty> props = new ArrayList<>();
 
-    public record BacktrackProperty(int id, Vec3 position, AABB boundingBox, int timePoint) { }
+    public record BacktrackProperty(LivingEntity livingEntity, Vec3 position, AABB boundingBox, int timePoint) { }
 
     public ArrayList<BacktrackProperty> backtrackProperties = new ArrayList<>();
 
@@ -398,9 +398,9 @@ public abstract class LivingEntity extends Entity implements Attackable {
         if(
                 Minecraft.getInstance().player != null &&
                 FunctionsManager.getFunctionByName("Rage").getSettingByName("Backtrack").isActivated() &&
-                this.distanceTo(Minecraft.getInstance().player) <= 16
+                this.distanceTo(Minecraft.getInstance().player) <= 64
         ) {
-            backtrackProperties.add(new BacktrackProperty(this.getId(), this.position(), this.getBoundingBox(), this.tickCount));
+            backtrackProperties.add(new BacktrackProperty(this, this.position(), this.getBoundingBox(), this.tickCount));
             backtrackProperties.removeIf(e -> this.tickCount - e.timePoint > 5);
             backtrackProperties.removeIf(e -> backtrackProperties.stream().anyMatch(element -> element.boundingBox.hashCode() == e.boundingBox.hashCode() && element.timePoint > e.timePoint));
         }
@@ -443,7 +443,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
         if(this.hurtTime > 0 && this.props.stream().noneMatch(prop -> prop instanceof PlayerESPFunction.ProtectedProperty))
             this.props.add(new PlayerESPFunction.ProtectedProperty());
 
-        if(this.isInvulnerable() && this.props.stream().noneMatch(prop -> prop instanceof PlayerESPFunction.InvulnerableProperty))
+        if(this.isInvulnerable() || (this instanceof Player player && (player.isCreative() || player.isSpectator())) && this.props.stream().noneMatch(prop -> prop instanceof PlayerESPFunction.InvulnerableProperty))
             this.props.add(new PlayerESPFunction.InvulnerableProperty());
 
         if(Rage.currentTarget == this && this.props.stream().noneMatch(prop -> prop instanceof PlayerESPFunction.TargetProperty))

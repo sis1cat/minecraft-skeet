@@ -1,197 +1,234 @@
 package sisicat.main.utilities;
 
-import java.awt.*;
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mlomb.freetypejni.*;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.world.phys.Vec2;
+
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
+
 import sisicat.IDefault;
 import sisicat.main.gui.elements.Window;
-import sisicat.main.gui.elements.widgets.Widget;
 
 import javax.imageio.ImageIO;
 
-import static com.mojang.blaze3d.systems.RenderSystem.blendFuncSeparate;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glUseProgram;
-import static org.lwjgl.opengl.GL30.GL_VERTEX_ARRAY_BINDING;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
 
-public class Font implements IDefault {
+public class Font implements IDefault, AutoCloseable {
 
-    private final java.awt.Font font;
+    private final Library library;
+    public Face face;
+
     private BufferedImage atlasImage;
     public DynamicTexture loadedTexture;
+
     private final boolean antiAliasing;
-    public FontMetrics fontMetrics;
 
-    private float size;
+    private int baseAscender;
+    private final int maxGlyphHeight;
+    public int glyphRenderOffset;
 
-    private final int
-            spacing;
-    public final int yOffset;
+    public Map<Character, int[]> charactersMap = new HashMap<>();
 
-    public Font(InputStream fontStream, float fontSize, boolean antiAliasing, boolean bold, int spacing, int yOffset) throws Exception {
+    public Font(InputStream fontStream, float fontSize, boolean antiAliasing) throws Exception {
 
         this.antiAliasing = antiAliasing;
-        this.spacing = spacing;
-        this.yOffset = yOffset;
-        this.size = fontSize;
 
-        font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontStream).deriveFont(bold ? 1 : 0, fontSize);
+        this.library = FreeType.newLibrary();
+
+        if (this.library == null) throw new RuntimeException("ft failed to init");
+
+        byte[] fontBytes = fontStream.readAllBytes();
+
+        ByteBuffer fontBuffer = BufferUtils.createByteBuffer(fontBytes.length);
+        fontBuffer.put(fontBytes).flip();
+
+        this.face = library.newFace(fontBuffer, 0);
+
+        if (this.face == null) {
+            library.delete();
+            throw new RuntimeException("face failed to init");
+        }
+
+        face.selectCharmap(1970170211);
+        face.setPixelSizes(0, (int) fontSize);
+
+        this.maxGlyphHeight = (this.face.getSize().getMetrics().getAscender() - this.face.getSize().getMetrics().getDescender()) >> 6;
+
         createFontAtlas();
 
     }
 
-    public Map<Character, int[]> charactersMap = new HashMap<>();
-
     private void createFontAtlas() {
 
-        atlasImage = new BufferedImage(2048,  2048, BufferedImage.TYPE_INT_ARGB);
+        atlasImage = new BufferedImage(2048, 2048, BufferedImage.TYPE_INT_ARGB);
 
-        Graphics2D g = atlasImage.createGraphics();
+        generateChars(32, 126);
+        generateChars(1024, 1279);
+        generateChars(176, 176);
 
-        if(antiAliasing) {
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        }
-
-        g.setFont(font);
-        g.setColor(Color.WHITE);
-
-        fontMetrics = g.getFontMetrics();
-
-        int x = 0, y = 0;
-
-        for (char c = 32; c <= 126; c++) {
-
-            int charWidth = fontMetrics.charWidth(c) + spacing;
-            int charHeight = fontMetrics.getHeight();
-
-            if (x + charWidth >= 2048) {
-                x = 0;
-                y += charHeight + 5;
-            }
-
-            g.drawString(String.valueOf(c), x, y + fontMetrics.getAscent());
-
-            charactersMap.put(c, new int[]{x, y, charWidth, charHeight});
-
-            x += charWidth + 2;
-
-        }
-
-        for (char c = 1024; c <= 1279; c++) {
-
-            int charWidth = fontMetrics.charWidth(c) + spacing;
-            int charHeight = fontMetrics.getHeight();
-
-            if (x + charWidth >= 2048) {
-                x = 0;
-                y += charHeight + 5;
-            }
-
-            g.drawString(String.valueOf(c), x, y + fontMetrics.getAscent());
-
-            charactersMap.put(c, new int[]{x, y, charWidth, charHeight});
-
-            x += charWidth + 2;
-
-        }
-
-        char c = 176;
-        int charWidth = fontMetrics.charWidth(c) + spacing;
-        int charHeight = fontMetrics.getHeight();
-
-        if (x + charWidth >= 2048) {
-            x = 0;
-            y += charHeight + 5;
-        }
-
-        g.drawString(String.valueOf(c), x, y + fontMetrics.getAscent());
-
-        charactersMap.put(c, new int[]{x, y, charWidth, charHeight});
-
-        x += charWidth + 2;
-
-        g.dispose();
-        if(this.size == 9 || this.size == 11)
-            increaseAlpha();
         loadTexture();
+
+        this.glyphRenderOffset = this.maxGlyphHeight - ((this.face.getSize().getMetrics().getAscender() >> 6) - this.baseAscender);
+
+    }
+
+    private int
+            atlasX = 0,
+            atlasY = 0;
+
+    private void generateChars(int from, int to) {
+
+        for (char c = (char) from; c <= (char) to; c++) {
+
+            int flags = antiAliasing ? 0 : 65536;
+
+            if (face.loadChar(c, flags | 4)) {
+                System.err.println("glyph nf: " + c);
+                continue;
+            }
+
+            GlyphSlot glyph = face.getGlyphSlot();
+            Bitmap bitmap = glyph.getBitmap();
+
+            if(c == 'A')
+                this.baseAscender = glyph.getBitmap().getRows();
+
+            int charWidth = glyph.getAdvance().getX() >> 6;
+            int charHeight = this.maxGlyphHeight;
+
+            if (atlasX + charWidth >= atlasImage.getWidth()) {
+                atlasX = 0;
+                atlasY += charHeight;
+            }
+
+            if (atlasY + charHeight >= atlasImage.getHeight()) {
+                System.err.println("atlas overflow");
+                break;
+            }
+
+            drawGlyphToAtlas(bitmap, glyph, atlasX, atlasY);
+
+            charactersMap.put(c, new int[]{atlasX, atlasY, charWidth, charHeight});
+
+            atlasX += charWidth + 1;
+
+        }
+
+    }
+
+    private void drawGlyphToAtlas(Bitmap bitmap, GlyphSlot glyph, int atlasX, int atlasY) {
+
+        ByteBuffer buffer = bitmap.getBuffer();
+
+        int bitmapWidth = bitmap.getWidth();
+        int bitmapHeight = bitmap.getRows();
+
+        int drawY = atlasY + (face.getSize().getMetrics().getAscender() >> 6) - glyph.getBitmapTop();
+        int drawX = atlasX + glyph.getBitmapLeft();
+
+        for (int j = 0; j < bitmapHeight; j++) {
+
+            for (int i = 0; i < bitmapWidth; i++) {
+
+                int alpha = buffer.get(j * bitmap.getPitch() + i) & 0xFF;
+
+                if (alpha > 0) {
+
+                    int color = (alpha << 24) | 0x00FFFFFF;
+
+                    if (drawX + i >= 0 && drawX + i < atlasImage.getWidth() && drawY + j >= 0 && drawY + j < atlasImage.getHeight())
+                        atlasImage.setRGB(drawX + i, drawY + j, color);
+
+                }
+
+            }
+
+        }
 
     }
 
     public void loadTexture() {
-
         try {
-
             ByteArrayOutputStream BAOS = new ByteArrayOutputStream();
             ImageIO.write(atlasImage, "png", BAOS);
-
             byte[] bytes = BAOS.toByteArray();
-
             ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
             data.flip();
-
             loadedTexture = new DynamicTexture(NativeImage.read(data));
-
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public int getStringWidth(String text) {
+
+        int width = 0;
+        String cleanText = removeParagraphPairs(text);
+
+        for (char c : cleanText.toCharArray())
+            if(charactersMap.containsKey(c))
+                width += charactersMap.get(c)[2];
+            else width += charactersMap.get('?')[2];
+
+        return width;
 
     }
 
-    private void increaseAlpha() {
-        for (int x = 0; x < atlasImage.getWidth(); x++) {
-            for (int y = 0; y < atlasImage.getHeight(); y++) {
-                int argb = atlasImage.getRGB(x, y);
-                int alpha = (argb >> 24) & 0xFF;
-                int red   = (argb >> 16) & 0xFF;
-                int green = (argb >> 8) & 0xFF;
-                int blue  = argb & 0xFF;
+    public int getBaseAscender() {
+        return this.baseAscender;
+    }
 
-                alpha = Math.min(255, (int) (alpha * 1.5));
+    public void renderText(String text, float x, float y, float[] color) {
 
-                atlasImage.setRGB(x, y, (alpha << 24) | (red << 16) | (green << 8) | blue);
+        y = Window.gameWindowHeight - y - this.glyphRenderOffset;
+
+        float currentX = x;
+
+        for (char c : text.toCharArray()) {
+
+            if (c == '\u00A7') continue;
+
+            int[] charData = charactersMap.get(c);
+
+            if (charData == null) {
+                charData = charactersMap.get('?');
+                if (charData == null) continue;
             }
+
+            int charWidth = charData[2];
+
+            Render.drawCharacter(c, currentX, y, color, 255, this);
+
+            currentX += charWidth;
+
         }
+
     }
 
-    public void renderHVCenteredCharacter(String text, float x, float y, float[] color){
-        renderText(text, x - (float) fontMetrics.charWidth(text.charAt(0)) / 2, y - (int)((float) fontMetrics.getHeight() / 2), color);
+    public void renderHVCenteredCharacter(String text, float x, float y, float[] color) {
+        if (text.isEmpty()) return;
+        renderText(text, x - (float) getStringWidth(String.valueOf(text.charAt(0))) / 2, y - (float) getBaseAscender() / 2, color);
     }
 
-    public void renderVCenteredText(String text, float x, float y, float[] color){
-        renderText(text, x, y - (int)((float) getFontHeight() / 2), color);
+    public void renderVCenteredText(String text, float x, float y, float[] color) {
+        renderText(text, x, y - (float) this.getBaseAscender() / 2, color);
     }
 
-    public void renderHVCenteredText(String text, float x, float y, float[] color){
-        renderText(text, x - (int)((float) getStringWidth(text) / 2), y - (int)((float) getFontHeight() / 2), color);
-    }
-
-    public int getStringWidth(String text){
-
-        return fontMetrics.stringWidth(removeParagraphPairs(text));
-
+    public void renderHVCenteredText(String text, float x, float y, float[] color) {
+        renderText(text, x - (float) getStringWidth(text) / 2, y - (float) getBaseAscender() / 2, color);
     }
 
     public static String removeParagraphPairs(String input) {
-
         StringBuilder result = new StringBuilder();
-
         for (int i = 0; i < input.length(); i++) {
             if (input.charAt(i) == '\u00A7' && i + 1 < input.length()) {
                 i++;
@@ -199,66 +236,27 @@ public class Font implements IDefault {
                 result.append(input.charAt(i));
             }
         }
-
         return result.toString();
     }
 
-    public int getFontHeight() {
-        return fontMetrics.getAscent() + yOffset;
-    }
-
-    public void renderOutlinedText(String text, float x, float y, float[] textColor, float[] outlineColor, float alpha){
-
-        if(textColor.length == 4)
-            textColor = new float[]{textColor[0], textColor[1], textColor[2], textColor[3] / 255 * (alpha / 255) * 255};
-        else textColor = new float[]{textColor[0], textColor[1], textColor[2], alpha};
-
-        if(outlineColor.length == 4)
-            outlineColor = new float[]{outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3] / 255 * (alpha / 255) * 255};
-        else outlineColor = new float[]{outlineColor[0], outlineColor[1], outlineColor[2], alpha};
-        
-        this.renderText(text, x - 1, y, outlineColor);
-        this.renderText(text, x + 1, y, outlineColor);
-
-        this.renderText(text, x, y + 1, outlineColor);
-        this.renderText(text, x, y - 1, outlineColor);
-
-        this.renderText(text, x + 1, y + 1, outlineColor);
-        this.renderText(text, x - 1, y - 1, outlineColor);
-
-        this.renderText(text, x + 1, y - 1, outlineColor);
-        this.renderText(text, x - 1, y + 1, outlineColor);
-
+    public void renderOutlinedText(String text, float x, float y, float[] textColor, float[] outlineColor, float alpha) {
+        if(textColor.length == 4) textColor = new float[]{textColor[0], textColor[1], textColor[2], textColor[3] / 255 * (alpha / 255) * 255}; else textColor = new float[]{textColor[0], textColor[1], textColor[2], alpha};
+        if(outlineColor.length == 4) outlineColor = new float[]{outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3] / 255 * (alpha / 255) * 255}; else outlineColor = new float[]{outlineColor[0], outlineColor[1], outlineColor[2], alpha};
+        this.renderText(text, x - 1, y, outlineColor); this.renderText(text, x + 1, y, outlineColor); this.renderText(text, x, y + 1, outlineColor); this.renderText(text, x, y - 1, outlineColor);
+        this.renderText(text, x + 1, y + 1, outlineColor); this.renderText(text, x - 1, y - 1, outlineColor); this.renderText(text, x + 1, y - 1, outlineColor); this.renderText(text, x - 1, y + 1, outlineColor);
         this.renderText(text, x, y, textColor);
-
     }
 
-    public void renderTextWithShadow(String text, float x, float y, float[] color){
-
+    public void renderTextWithShadow(String text, float x, float y, float[] color) {
         renderText(text, x + 1, y + 1, sisicat.main.utilities.Color.c12);
-        renderText(text, x , y , color);
-
+        renderText(text, x, y, color);
     }
 
-    public void renderText(String text, float x, float y, float[] color) {
+    @Override
+    public void close() {
 
-        y = Window.gameWindowHeight - y - fontMetrics.getHeight() - yOffset;
-
-        for (char c : text.toCharArray()) {
-
-            int[] charData = charactersMap.get(c);
-            if(charData == null)
-                continue;
-
-            int charX = charData[0];
-            int charY = charData[1];
-            int charWidth = charData[2];
-
-            Render.drawCharacter(c, x, y, color, 255, this);
-
-            x += charWidth;
-
-        }
+        if (library != null) library.delete();
+        if (face != null) face.delete();
 
     }
 

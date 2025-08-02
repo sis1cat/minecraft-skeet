@@ -1,7 +1,6 @@
 package sisicat.main.gui.elements.widgets;
 
 import com.darkmagician6.eventapi.EventTarget;
-import com.darkmagician6.eventapi.types.Priority;
 import net.minecraft.world.phys.Vec2;
 import sisicat.MineSense;
 import sisicat.events.MouseEvent;
@@ -15,7 +14,6 @@ import sisicat.main.utilities.Text;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Locale;
 
 public class Slider extends Widget {
 
@@ -114,7 +112,7 @@ public class Slider extends Widget {
 
         if(!text.isEmpty()) {
             Text.getMenuFont().renderText(text, x + Math.round(20 * Window.windowScale), y, Color.c205);
-            occupiedSpace += Text.getMenuFont().getFontHeight();
+            occupiedSpace += Text.getMenuFont().getBaseAscender();
             occupiedSpace += Math.round(6 * Window.windowScale);
         }
 
@@ -127,7 +125,7 @@ public class Slider extends Widget {
         width = Math.min(Math.max(groupWidth - Math.round(100 * Window.windowScale), minWidgetWidth), maxWidgetWidth);
 
         this.x = x + Math.round(20 * Window.windowScale);
-        this.y = y + (text.isEmpty() ? 0 : Math.round(Text.getMenuFont().getFontHeight() + 6 * Window.windowScale));
+        this.y = y + (text.isEmpty() ? 0 : Math.round(Text.getMenuFont().getBaseAscender() + 6 * Window.windowScale));
 
         Render.drawRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
 
@@ -161,7 +159,7 @@ public class Slider extends Widget {
 
         String textValue = truncateToUnitSize(functionSetting.getFloatValue(), functionSetting.getUnitSize()) + functionSetting.getUnitName();
 
-        Text.getMenuBoldFont().renderOutlinedText(textValue, this.x + (valueWidth - (float) Text.getMenuBoldFont().getStringWidth(textValue) / 2), this.y + widgetHeight - (int)((float) Text.getMenuBoldFont().getFontHeight() / 2 + 1), Color.c190, new float[]{0, 0, 0, 150}, 255);
+        Text.getMenuBoldFont().renderOutlinedText(textValue, this.x + (valueWidth - (float) Text.getMenuBoldFont().getStringWidth(textValue) / 2), this.y + widgetHeight - (int)((float) Text.getMenuBoldFont().getBaseAscender() / 2 + 1), Color.c190, new float[]{0, 0, 0, 150}, 255);
 
     }
 

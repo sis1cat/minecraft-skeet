@@ -1,11 +1,29 @@
 package sisicat.events;
 
+import com.darkmagician6.eventapi.events.Cancellable;
 import com.darkmagician6.eventapi.events.Event;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
-public class MovementUpdateEvent implements Event {
+public class MovementUpdateEvent implements Event, Cancellable {
+
+    public boolean cancelled = false;
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean state) {
+        this.cancelled = state;
+    }
+
+    @Override
+    public void cancel() {
+        this.cancelled = false;
+    }
 
     public enum TYPE {
 

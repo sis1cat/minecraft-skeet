@@ -107,20 +107,4 @@ public class Color {
 
     }
 
-    public static class ColorPicker {
-
-        public static float[] getSVOffsets(float r, float g, float b) {
-            float[] hsv = rgbToHsv(r, g, b);
-            float xOffset = Math.min(hsv[1] / 0.85f, 1f);
-            float yOffset = (1f - Math.min(hsv[2] / 0.85f, 1f));
-            return new float[]{xOffset, yOffset};
-        }
-
-        public static float getHOffset(float r, float g, float b) {
-            float[] hsv = rgbToHsv(r, g, b);
-            return 1 - hsv[0] / 360.0f;
-        }
-
-    }
-
 }

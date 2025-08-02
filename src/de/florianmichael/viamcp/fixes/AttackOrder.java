@@ -39,7 +39,7 @@ public class AttackOrder {
             mc.gameMode.attack(entityIn, target);
         } else {
             mc.gameMode.attack(entityIn, target);
-            mc.player.swing(InteractionHand.MAIN_HAND);
+
         }
     }
 

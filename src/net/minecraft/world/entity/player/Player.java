@@ -1537,6 +1537,7 @@ public abstract class Player extends LivingEntity {
     public boolean tryToStartFallFlying() {
         if (!this.isFallFlying() && this.canGlide() && !this.isInWater()) {
             this.startFallFlying();
+
             return true;
         } else {
             return false;

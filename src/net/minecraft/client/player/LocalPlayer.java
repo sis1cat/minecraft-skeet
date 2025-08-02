@@ -264,6 +264,9 @@ public class LocalPlayer extends AbstractClientPlayer {
             MovementUpdateEvent preMovementUpdateEvent = new MovementUpdateEvent(this.getX(), this.getY(), this.getZ(), 0, this.getDeltaMovement(), this.getYRot(), this.getXRot(), this.onGround(), MovementUpdateEvent.TYPE.PRE);
             EventManager.call(preMovementUpdateEvent);
 
+            if(preMovementUpdateEvent.cancelled)
+                return;
+
             double d0 = preMovementUpdateEvent.getPosition().x - this.xLast;
             double d1 = preMovementUpdateEvent.getPosition().y - this.yLast;
             double d2 = preMovementUpdateEvent.getPosition().z - this.zLast;

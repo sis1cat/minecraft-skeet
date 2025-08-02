@@ -16,6 +16,7 @@ import sisicat.main.gui.MainRender;
 import sisicat.main.gui.elements.widgets.*;
 import sisicat.main.utilities.Color;
 import sisicat.main.utilities.Render;
+import sisicat.main.utilities.Text;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -481,11 +482,6 @@ public class Window extends Widget implements IDefault {
         updateDPI();
 
         updateSizes();
-
-        /*if (GLFW.glfwGetWindowAttrib(mc.getWindow().getWindow(), GLFW.GLFW_ICONIFIED) != GLFW.GLFW_TRUE) {
-            windowX = Mth.clamp(windowX, 0, gameWindowWidth - windowWidth);
-            windowY = Mth.clamp(windowY, 0, gameWindowHeight - windowHeight);
-        }*/
 
         Render.drawRectangleBorders(windowX, windowY, windowWidth, windowHeight, 1, Color.c12, 255 );
         Render.drawRectangleBorders(windowX + 1, windowY + 1, (windowWidth - 2), (windowHeight - 2), 1, Color.c60, 255);

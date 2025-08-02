@@ -356,7 +356,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
     @Nullable
     public HitResult hitResult;
     public int rightClickDelay;
-    protected int missTime;
+    public int missTime;
     private volatile boolean pause;
     private long lastNanoTime = Util.getNanos();
     private long lastTime;
@@ -1575,7 +1575,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
                         this.player.resetAttackStrengthTicker();
                 }
 
-                AttackOrder.sendConditionalSwing(this.hitResult, InteractionHand.MAIN_HAND);
+                this.player.swing(InteractionHand.MAIN_HAND);
                 return flag;
             }
         }

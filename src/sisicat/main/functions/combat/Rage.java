@@ -172,7 +172,6 @@ public class Rage extends Function implements IDefault {
     }
 
     public static LivingEntity currentTarget;
-    private static LivingEntity prevTarget;
     public static Vec2 currentRotation = null;
     public static Vec3 targetDot = null;
 
@@ -181,7 +180,6 @@ public class Rage extends Function implements IDefault {
     private static int legitStopSprinting = 0;
     private static boolean wasSprinting = false;
 
-    private static int prevTickAttack = 0;
 
     private static final ArrayList<LivingEntity.BacktrackProperty> removedBPS = new ArrayList<>();
 
@@ -226,15 +224,13 @@ public class Rage extends Function implements IDefault {
 
         startSettingUp();
 
-        prevTarget = currentTarget;
         currentTarget = sortTarget();
 
         if(!removedBPS.isEmpty()) {
 
             for (LivingEntity.BacktrackProperty removedBP : removedBPS) {
-
+                LivingEntity livingEntity = removedBP.livingEntity();
                 if (
-                        mc.level.getEntity(removedBP.id()) instanceof LivingEntity livingEntity &&
                         livingEntity.tickCount - removedBP.timePoint() <= backtrack.floatValue
                 )   livingEntity.backtrackProperties.add(removedBP);
 
@@ -246,7 +242,7 @@ public class Rage extends Function implements IDefault {
 
         final Vec2 rotation = getRawRotationToTarget();
 
-        if (currentTarget.distanceTo(mc.player) > attackDistance.getFloatValue() + 1 || rotation == null)
+        if (currentTarget.distanceTo(mc.player) > this.attackDistance.getFloatValue() + 1 || rotation == null)
             rotate(new Vec2(mc.player.getYRot(), mc.player.getXRot()));
         else
             rotate(rotation);
@@ -420,7 +416,7 @@ public class Rage extends Function implements IDefault {
     private boolean canBeAttacked() {
 
         return
-                currentTarget.hurtTime <= 0 &&
+                currentTarget.hurtTime == 0 &&
                 mc.player.getAttackStrengthScale(0.5F) > 0.9F;
 
     }
@@ -444,7 +440,7 @@ public class Rage extends Function implements IDefault {
 
         ItemStack itemStack = mc.player.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (!itemStack.isItemEnabled(mc.level.enabledFeatures()))
+        if (!itemStack.isItemEnabled(mc.level.enabledFeatures()) || mc.player.isHandsBusy() || mc.missTime > 0)
             return;
 
         mc.gameMode.attack(mc.player, currentTarget);
@@ -484,7 +480,7 @@ public class Rage extends Function implements IDefault {
                 wasSprinting = true;
             }
 
-            sendAttackPacket();
+            this.sendAttackPacket();
 
             if(wasSprinting) {
                 mc.player.setSprinting(true);
@@ -492,10 +488,10 @@ public class Rage extends Function implements IDefault {
             }
 
         } else
-            sendAttackPacket();
+            this.sendAttackPacket();
 
-        if(canBacktrack())
-            IDefault.displayClientChatMessage("  Tracked player at: " + (currentTarget.tickCount - getNearestBacktrack().timePoint()) + "t old AABB");
+        if(this.getNearestBacktrack() != null)
+            IDefault.displayClientChatMessage("  Tracked player at: " + (currentTarget.tickCount - this.getNearestBacktrack().timePoint()) + "t old AABB");
 
     }
 
@@ -507,6 +503,23 @@ public class Rage extends Function implements IDefault {
 
         if (packetReceiveEvent.getPacket() instanceof ClientboundMoveEntityPacket clientboundMoveEntityPacket && clientboundMoveEntityPacket.getEntity(mc.level) == mc.player)
             mc.player.wasGrounded = clientboundMoveEntityPacket.isOnGround();
+
+    }
+
+    @EventTarget
+    private void event(PacketSendEvent packetSendEvent) {
+
+        if (mc.level == null || mc.player == null)
+            return;
+
+        if (packetSendEvent.getPacket() instanceof ServerboundMovePlayerPacket serverboundMovePlayerPacket)
+            mc.player.wasGrounded = serverboundMovePlayerPacket.isOnGround();
+
+        if(packetSendEvent.getPacket() instanceof ServerboundSwingPacket packet)
+            System.out.println(packet + " " + mc.player.tickCount);
+
+        if(packetSendEvent.getPacket() instanceof ServerboundPlayerActionPacket packet)
+            System.out.println(packet.getAction() + " " + mc.player.tickCount);
 
     }
 
@@ -535,16 +548,14 @@ public class Rage extends Function implements IDefault {
 
     }
 
-    private boolean canBacktrack() {
-        return backtrack.isActivated() && getNearestBacktrack() != null;
-    }
-
     private boolean isTargetPicked() {
 
         final AABB lastAABB = currentTarget.getBoundingBox();
-        
-        if(canBacktrack())
-            currentTarget.setBoundingBox(getNearestBacktrack().boundingBox());
+
+        LivingEntity.BacktrackProperty backtrackProperty = this.getNearestBacktrack();
+
+        if(backtrackProperty != null)
+            currentTarget.setBoundingBox(backtrackProperty.boundingBox());
 
         final HitResult hitResult = RayTrace.getHitResult(currentRotation.x, currentRotation.y, this.attackDistance.getFloatValue(), this.attackThroughBlocks.isActivated() ? this.attackThroughBlocks.stringValue.equals("All") ? 1 : 0 : 2);
 
@@ -563,7 +574,7 @@ public class Rage extends Function implements IDefault {
 
             return
                     mc.player.fallDistance > 0.0F && !mc.player.wasGrounded &&
-                            RayTrace.getBlockUnderHitbox(nextY, blockAboveHead ? 0 : 0.15).getType() == HitResult.Type.MISS;
+                            RayTrace.getBlockUnderHitbox(nextY, blockAboveHead ? 0 : 0.1).getType() == HitResult.Type.MISS;
 
         } else
             return !mc.player.wasGrounded && mc.player.fallDistance > 0.0F;
@@ -577,11 +588,11 @@ public class Rage extends Function implements IDefault {
                 rawPitchDelta = (to.y - currentRotation.y);
 
         final float
-                yawLimit = 55f + (float) Math.random() * 5f,
-                pitchLimit = 20f + (float) Math.random() * 3f;
+                yawLimit = 45f + (float) Math.random() * 15f,
+                pitchLimit = 15f + (float) Math.random() * 10f;
 
-        float yawDelta = Mth.clamp(rawYawDelta * (0.65f + (float) Math.random() * 0.05f), -yawLimit, yawLimit);
-        float pitchDelta = Mth.clamp(rawPitchDelta * (0.5f + (float) Math.random() * 0.05f), -pitchLimit, pitchLimit);
+        float yawDelta = Mth.clamp(rawYawDelta * (0.75f + (float) Math.random() * 0.05f), -yawLimit, yawLimit);
+        float pitchDelta = Mth.clamp(rawPitchDelta * (0.65f + (float) Math.random() * 0.05f), -pitchLimit, pitchLimit);
 
         currentRotation.x += applySensitivityMultiplier(yawDelta + (float) Math.random() * 2f - 1f);
         currentRotation.y += applySensitivityMultiplier(pitchDelta + (float) Math.random() * 2f - 1f);
@@ -610,21 +621,25 @@ public class Rage extends Function implements IDefault {
 
     }
 
-    public static float applyIdealSensitivityMultiplier(float angle) {
-
-        double d5 = getSensitivityMultiplier();
-
-        return (float) (Math.round((double)(angle / 0.15f) / d5) * d5) * 0.15f;
-
-    }
-
     private static final Vec3 hitBoxDotPosition = new Vec3(0, 0, 0);
     private static final Vec3 hitBoxDotVector = new Vec3(Math.random() * 0.6 + .4, Math.random() * 0.6 + .4, Math.random() * 0.6 + .4);
 
+    int lastSortTick = 0;
+
     private LivingEntity.BacktrackProperty getNearestBacktrack() {
 
-        currentTarget.backtrackProperties.removeIf(e -> currentTarget.tickCount - e.timePoint() > backtrack.floatValue);
-        currentTarget.backtrackProperties.sort((Comparator.comparingDouble(o -> mc.player.position().distanceTo(o.position()))));
+        if(!backtrack.getCanBeActivated())
+            return null;
+
+        if(lastSortTick != mc.player.tickCount) {
+
+            currentTarget.backtrackProperties.removeIf(e -> currentTarget.tickCount - e.timePoint() > backtrack.floatValue);
+            currentTarget.backtrackProperties.removeIf(e -> currentTarget.tickCount - e.timePoint() == 0);
+            currentTarget.backtrackProperties.sort((Comparator.comparingDouble(o -> mc.player.position().distanceTo(o.position()))));
+
+            lastSortTick = mc.player.tickCount;
+
+        }
 
         if(currentTarget.backtrackProperties.isEmpty())
             return null;
@@ -638,11 +653,11 @@ public class Rage extends Function implements IDefault {
         AABB boundingBox = currentTarget.getBoundingBox();
         Vec3 position = currentTarget.position();
 
-        LivingEntity.BacktrackProperty backtrackProperty = null;
+        LivingEntity.BacktrackProperty backtrackProperty = this.getNearestBacktrack();
 
-        if(canBacktrack()) {
+        targetDot = null;
 
-            backtrackProperty = getNearestBacktrack();
+        if(backtrackProperty != null) {
 
             boundingBox = backtrackProperty.boundingBox();
             position = backtrackProperty.position();
@@ -656,7 +671,7 @@ public class Rage extends Function implements IDefault {
                 yDifference = targetY - mc.player.getEyeY(),
                 zDifference = position.z - mc.player.getZ();
 
-        targetDot = new Vec3(0, targetY - position.y, 0);
+        Vec3 tempDot = new Vec3(0, targetY - position.y, 0);
 
         float multipointGridSize = 1F;
 
@@ -776,35 +791,48 @@ public class Rage extends Function implements IDefault {
 
             final ArrayList<Vec3> visibleMultiPoints = new ArrayList<>();
 
-            for (Vec3 point : allMultiPoints) {
+            if(this.attackThroughBlocks.isActivated() && this.attackThroughBlocks.getStringValue().equals("All"))
+                visibleMultiPoints.addAll(allMultiPoints);
+            else {
 
-                final double
-                        xPointDifference = point.x - mc.player.getX(),
-                        yPointDifference = point.y - mc.player.getEyeY(),
-                        zPointDifference = point.z - mc.player.getZ();
+                float prevDistance = Float.MAX_VALUE;
 
-                final AABB lastAABB = currentTarget.getBoundingBox();
+                for (Vec3 point : allMultiPoints) {
 
-                currentTarget.setBoundingBox(boundingBox);
+                    float actualDistance = (float) mc.player.getEyePosition().distanceTo(point); // some optimisation
 
-                final HitResult hitResult =
-                        RayTrace.getHitResultByDifferences(
-                                xPointDifference,
-                                yPointDifference,
-                                zPointDifference,
-                                32,
-                                this.attackThroughBlocks.isActivated() ? this.attackThroughBlocks.stringValue.equals("All") ? 1 : 0 : 2
-                        );
+                    if(actualDistance > prevDistance)
+                        continue;
 
-                currentTarget.setBoundingBox(lastAABB);
+                    prevDistance = actualDistance;
 
-                if (hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == currentTarget)
-                    visibleMultiPoints.add(point);
+                    final double
+                            xPointDifference = point.x - mc.player.getX(),
+                            yPointDifference = point.y - mc.player.getEyeY(),
+                            zPointDifference = point.z - mc.player.getZ();
+
+                    final AABB lastAABB = currentTarget.getBoundingBox();
+
+                    currentTarget.setBoundingBox(boundingBox);
+
+                    final HitResult hitResult =
+                            RayTrace.getHitResultByDifferences(
+                                    xPointDifference,
+                                    yPointDifference,
+                                    zPointDifference,
+                                    6,
+                                    this.attackThroughBlocks.isActivated() ? this.attackThroughBlocks.stringValue.equals("All") ? 1 : 0 : 2
+                            );
+
+                    currentTarget.setBoundingBox(lastAABB);
+
+                    if (hitResult instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() == currentTarget)
+                        visibleMultiPoints.add(point);
+
+                }
 
             }
-
             if (visibleMultiPoints.isEmpty()) {
-                targetDot = null;
                 if(backtrackProperty != null) {
                     removedBPS.add(backtrackProperty);
                     currentTarget.backtrackProperties.remove(backtrackProperty);
@@ -827,7 +855,7 @@ public class Rage extends Function implements IDefault {
 
             }
 
-            targetDot = new Vec3(nearestVisiblePoint.x - position.x, nearestVisiblePoint.y - position.y, nearestVisiblePoint.z - position.z);
+            tempDot = new Vec3(nearestVisiblePoint.x - position.x, nearestVisiblePoint.y - position.y, nearestVisiblePoint.z - position.z);
 
             xDifference = nearestVisiblePoint.x - mc.player.getX();
             yDifference = nearestVisiblePoint.y - mc.player.getEyeY();
@@ -870,7 +898,7 @@ public class Rage extends Function implements IDefault {
             yDifference = position.y + hitBoxDotPosition.y - mc.player.getEyeY();
             zDifference = position.z + hitBoxDotPosition.z - bbDepth / 2 - mc.player.getZ();
 
-            targetDot = new Vec3(hitBoxDotPosition.x - bbWidth / 2, hitBoxDotPosition.y, hitBoxDotPosition.z - bbDepth / 2);
+            tempDot = new Vec3(hitBoxDotPosition.x - bbWidth / 2, hitBoxDotPosition.y, hitBoxDotPosition.z - bbDepth / 2);
 
         }
 
@@ -883,13 +911,13 @@ public class Rage extends Function implements IDefault {
                         xDifference,
                         yDifference,
                         zDifference,
-                        this.attackDistance.getFloatValue() + 1,
+                        6,
                         this.attackThroughBlocks.isActivated() ? this.attackThroughBlocks.stringValue.equals("All") ? 1 : 0 : 2
                 );
 
         currentTarget.setBoundingBox(lastAABB);
 
-        if (!(hitResult instanceof EntityHitResult) || ((EntityHitResult) hitResult).getEntity() != currentTarget) {
+        if (!(hitResult instanceof EntityHitResult entityHitResult) || entityHitResult.getEntity().getId() != currentTarget.getId()) {
             if(backtrackProperty != null) {
                 removedBPS.add(backtrackProperty);
                 currentTarget.backtrackProperties.remove(backtrackProperty);
@@ -897,6 +925,8 @@ public class Rage extends Function implements IDefault {
             }
             return null;
         }
+
+        targetDot = tempDot;
 
         final Vec2 rotation =
                 RayTrace.getRotationForDifferences(

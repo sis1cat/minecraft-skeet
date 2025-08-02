@@ -169,7 +169,7 @@ public class PlayerESPFunction extends Function {
         if(Rage.targetDot == null) {
 
             aimbotDot = null;
-            distance = 6;
+            distance = 16;
 
             return;
 
@@ -304,9 +304,9 @@ public class PlayerESPFunction extends Function {
                 float maxBarSize = lastBoxMaxY - lastBoxMinY - 1;
                 float barSize = maxBarSize / livingEntity.getMaxHealth() * livingEntity.barHealth;
 
-                float healthY = Math.min(lastBoxMinY + 1 + (maxBarSize - barSize) - (int)(Text.getMenuFont().getFontHeight() / 2f), lastBoxMaxY - 1 - Text.getMenuFont().getFontHeight());
+                float healthY = Math.min(lastBoxMinY + 1 + (maxBarSize - barSize) - (int)(Text.getMenuFont().getBaseAscender() / 2f), lastBoxMaxY - 1 - Text.getMenuFont().getBaseAscender());
 
-                healthY = Mth.clamp(healthY, lastBoxMinY + 1, lastBoxMaxY - Text.getMenuFont().getFontHeight());
+                healthY = Mth.clamp(healthY, lastBoxMinY, lastBoxMaxY - Text.getMenuFont().getBaseAscender());
 
                 String health = Float.toString(Math.round(livingEntity.getHealth() * 10) / 10f);
 
@@ -321,13 +321,10 @@ public class PlayerESPFunction extends Function {
                 for(UpperAttribute upperAttribute : livingEntity.upperAttributes) {
 
                     if(upperAttribute instanceof NameAttribute nameAttribute) {
-
-                        final Vec2 centerPos2D = World.project(livingEntity.getPosition(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)).x, livingEntity.getPosition(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)).y, livingEntity.getPosition(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true)).z);
-
                         float centeredX = lastBoxMinX + (lastBoxMaxX - lastBoxMinX) / 2f;
 
                         int ypos = -(int) (double) (player.upperAttributes.indexOf(upperAttribute) * (this.armorIcons.getCanBeActivated() ? 16 : 0));
-                        nameAttribute.draw((int) centeredX, lastBoxMinY - Text.getMenuFont().getFontHeight() - 4, ypos, nameColor.getRGBAColor(), this, livingEntity);
+                        nameAttribute.draw((int) centeredX, lastBoxMinY - Text.getMenuFont().getBaseAscender() - 4, ypos, nameColor.getRGBAColor(), this, livingEntity);
                     }
                 }
 
@@ -338,7 +335,7 @@ public class PlayerESPFunction extends Function {
                 for(PlayerProperty prop : player.props) {
 
                     if(prop instanceof ItemProperty item) {
-                        int ypos = (int) (double) (player.props.indexOf(prop) * (Text.getMenuFont().getFontHeight() + 3));
+                        int ypos = (int) (double) (player.props.indexOf(prop) * (Text.getMenuFont().getBaseAscender() + 3));
                         item.draw(lastBoxMaxX + 3, lastBoxMinY, ypos, itemIconColor.getRGBAColor(), this, player);
                     }
 
@@ -353,7 +350,7 @@ public class PlayerESPFunction extends Function {
                     if(prop instanceof ItemProperty)
                         continue;
 
-                    int ypos = (int) (double) (player.props.indexOf(prop) * (Text.getMenuFont().getFontHeight() + 3));
+                    int ypos = (int) (double) (player.props.indexOf(prop) * (Text.getMenuFont().getBaseAscender() + 3));
 
                     prop.draw(lastBoxMaxX + 3, lastBoxMinY, ypos, flagsColor.getRGBAColor(), this, livingEntity);
 
@@ -369,7 +366,7 @@ public class PlayerESPFunction extends Function {
 
                         int armorLineSize = armorAttribute.armor.size() * 14;
 
-                        int ypos = -(int) (double) (player.upperAttributes.indexOf(upperAttribute) * (Text.getMenuFont().getFontHeight() + 3));
+                        int ypos = -(int) (double) (player.upperAttributes.indexOf(upperAttribute) * (Text.getMenuFont().getBaseAscender() + 3));
                         armorAttribute.draw(lastBoxMinX + (int) ((lastBoxMaxX - lastBoxMinX) / 2f), lastBoxMinY - 18, armorLineSize / 2, ypos, armorIconsColor.getRGBAColor(), this, livingEntity);
                     }
 
@@ -757,8 +754,7 @@ public class PlayerESPFunction extends Function {
         int charX = charData[0];
         int charY = charData[1];
         int charWidth = charData[2];
-        int charHeight = charData[3] + 1; // for outline lower pixels
-
+        int charHeight = charData[3] + 1; // for lower outline pixels
         y -= 1; // compensate
 
         float tx = (float) charX / 2048;
@@ -1172,7 +1168,7 @@ public class PlayerESPFunction extends Function {
             return;
         }
 
-        y = Window.gameWindowSize.y - y - Text.getMenuFont().fontMetrics.getHeight() - Text.getMenuFont().yOffset;
+        y = Window.gameWindowSize.y - y - Text.getMenuFont().glyphRenderOffset + (outlined ? -1 : 0);
 
         float[] lastColor = new float[]{color[0], color[1], color[2], color[3]};
 
@@ -1279,10 +1275,8 @@ public class PlayerESPFunction extends Function {
     }
 
     public void renderOutlinedText(String text, float x, float y, float[] textColor, float[] outlineColor, boolean centered, boolean minecraftColored, float alpha){
-        outlineColor[3] = 1000;
-        x += (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0);
 
-        //float outlineAlpha = (float) Math.pow(alpha / 255f, 2) * 255f;
+        x += (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0);
 
         this.renderText(text, x, y, textColor, minecraftColored, alpha, true);
 
@@ -1844,7 +1838,7 @@ public class PlayerESPFunction extends Function {
                             
                             if(sampledOutline.a > 0) {
                                 sampledOutline.rgb = blackjopcasino;
-                                sampledOutline.a = 1;
+                                //sampledOutline.a = 1;
                             }
                             
                             vec4 finalColor;

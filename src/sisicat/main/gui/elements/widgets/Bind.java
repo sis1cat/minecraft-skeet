@@ -1,7 +1,6 @@
 package sisicat.main.gui.elements.widgets;
 
 import com.darkmagician6.eventapi.EventTarget;
-import com.darkmagician6.eventapi.types.Priority;
 import net.minecraft.world.phys.Vec2;
 import sisicat.MineSense;
 import sisicat.events.KeyEvent;
@@ -68,7 +67,7 @@ public class Bind extends Widget {
         this.y = this.y + 1;
 
         width = Text.getMenuBindsFont().getStringWidth(keyBindName);
-        height = Text.getMenuBindsFont().getFontHeight();
+        height = Text.getMenuBindsFont().getBaseAscender();
 
         if(!isComboOpened) return;
 
