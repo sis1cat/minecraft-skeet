@@ -744,6 +744,8 @@ public class PlayerESPFunction extends Function {
         int charWidth = charData[2] + 2;
         int charHeight = charData[3] + 2;
 
+        y -= 2;
+
         float tx = (float) charX / 2048;
         float ty = (float) (charY + charHeight) / 2048;
         float tx2 = (float) (charX + charWidth) / 2048;
@@ -1353,8 +1355,8 @@ public class PlayerESPFunction extends Function {
             return;
         }
 
-        this.renderText(Font.removeParagraphPairs(text), x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0), y, new float[]{12, 12, 12, color[3]}, false, alpha);
-        this.renderText(text, x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0) , y - 1, color, true, alpha);
+        this.renderText(Font.removeParagraphPairs(text), x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0), y + 1, new float[]{12, 12, 12, color[3]}, false, alpha);
+        this.renderText(text, x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0) , y, color, true, alpha);
 
     }
 
@@ -1363,7 +1365,7 @@ public class PlayerESPFunction extends Function {
         x += (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0);
 
         this.renderOutline(text, x - 1, y, textColor, minecraftColored, alpha);
-        this.renderText(text, x, y - 1, textColor, minecraftColored, alpha);
+        this.renderText(text, x, y + 1, textColor, minecraftColored, alpha);
 
     }
 
