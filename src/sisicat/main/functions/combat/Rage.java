@@ -589,7 +589,7 @@ public class Rage extends Function implements IDefault {
 
         final float
                 yawLimit = 45f + (float) Math.random() * 15f,
-                pitchLimit = 15f + (float) Math.random() * 10f;
+                pitchLimit = 10f + (float) Math.random() * 5f;
 
         float yawDelta = Mth.clamp(rawYawDelta * (0.75f + (float) Math.random() * 0.05f), -yawLimit, yawLimit);
         float pitchDelta = Mth.clamp(rawPitchDelta * (0.65f + (float) Math.random() * 0.05f), -pitchLimit, pitchLimit);
@@ -615,7 +615,7 @@ public class Rage extends Function implements IDefault {
         double d5 = getSensitivityMultiplier();
 
         double step = d5 * 0.15;
-        int noiseSteps = Math.max((int) Math.round(Math.random() * 6) - 3, 2);
+        int noiseSteps = Math.max(2, (int)(Math.random() * 6));
 
         return (float) (Math.round((double)(angle / 0.15f) / d5) * d5) * 0.15f + noiseSteps * (float) step;
 
