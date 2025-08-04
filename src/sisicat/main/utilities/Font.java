@@ -80,6 +80,7 @@ public class Font implements IDefault, AutoCloseable {
         generateChars(592, 687);
         generateChars(7424, 7551);
         generateChars(7468, 7500);
+        generateChars(8192, 8303);
 
         generateChars(9728, 9983);
         generateChars(126976, 127231);
