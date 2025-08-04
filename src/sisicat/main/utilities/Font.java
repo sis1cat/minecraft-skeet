@@ -9,9 +9,15 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import com.mlomb.freetypejni.*;
 import com.mojang.blaze3d.platform.NativeImage;
+import generaloss.freetype.FTLibrary;
+import generaloss.freetype.bitmap.FTBitmap;
+import generaloss.freetype.face.FTFace;
+import generaloss.freetype.face.FTLoad;
+import generaloss.freetype.face.FTLoadFlags;
+import generaloss.freetype.glyph.FTGlyphSlot;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 
 import org.lwjgl.BufferUtils;
@@ -24,25 +30,21 @@ import javax.imageio.ImageIO;
 
 public class Font implements IDefault, AutoCloseable {
 
-    private final Library library;
-    public Face face;
+    private final FTLibrary library;
+    public FTFace face;
 
     private BufferedImage atlasImage;
     public DynamicTexture loadedTexture;
-
-    private final boolean antiAliasing;
 
     private int baseAscender;
     private final int maxGlyphHeight;
     public int glyphRenderOffset;
 
-    public Map<Character, int[]> charactersMap = new HashMap<>();
+    public Map<Integer, int[]> charactersMap = new HashMap<>();
 
-    public Font(InputStream fontStream, float fontSize, boolean antiAliasing) throws Exception {
+    public Font(InputStream fontStream, float fontSize) throws Exception {
 
-        this.antiAliasing = antiAliasing;
-
-        this.library = FreeType.newLibrary();
+        this.library = FTLibrary.init();
 
         if (this.library == null) throw new RuntimeException("ft failed to init");
 
@@ -51,17 +53,17 @@ public class Font implements IDefault, AutoCloseable {
         ByteBuffer fontBuffer = BufferUtils.createByteBuffer(fontBytes.length);
         fontBuffer.put(fontBytes).flip();
 
-        this.face = library.newFace(fontBuffer, 0);
+        this.face = library.newMemoryFace(fontBuffer, 0);
 
         if (this.face == null) {
-            library.delete();
+            library.done();
             throw new RuntimeException("face failed to init");
         }
 
-        face.selectCharmap(1970170211);
+        //face.(FTEncoding.UNICODE);
         face.setPixelSizes(0, (int) fontSize);
 
-        this.maxGlyphHeight = (this.face.getSize().getMetrics().getAscender() - this.face.getSize().getMetrics().getDescender()) >> 6;
+        this.maxGlyphHeight = (this.face.getSize().getMetrics().getAscender() - this.face.getSize().getMetrics().getDescender());
 
         createFontAtlas();
 
@@ -72,12 +74,35 @@ public class Font implements IDefault, AutoCloseable {
         atlasImage = new BufferedImage(2048, 2048, BufferedImage.TYPE_INT_ARGB);
 
         generateChars(32, 126);
-        generateChars(1024, 1279);
         generateChars(176, 176);
+        generateChars(1024, 1279);
+
+        generateChars(592, 687);
+        generateChars(7424, 7551);
+        generateChars(7468, 7500);
+
+        generateChars(9728, 9983);
+        generateChars(126976, 127231);
+        generateChars(127232, 127487);
+        generateChars(127488, 127743);
+        generateChars(127744, 128511);
+        generateChars(128512, 128591);
+        generateChars(128640, 128767);
+        generateChars(128768, 128895);
+        generateChars(129280, 129535);
+        generateChars(129536, 129647);
+
+        File outputFile = new File("output.png");
+
+        try {
+            ImageIO.write(atlasImage, "png", outputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         loadTexture();
 
-        this.glyphRenderOffset = this.maxGlyphHeight - ((this.face.getSize().getMetrics().getAscender() >> 6) - this.baseAscender);
+        this.glyphRenderOffset = this.maxGlyphHeight - ((this.face.getSize().getMetrics().getAscender()) - this.baseAscender);
 
     }
 
@@ -87,27 +112,28 @@ public class Font implements IDefault, AutoCloseable {
 
     private void generateChars(int from, int to) {
 
-        for (char c = (char) from; c <= (char) to; c++) {
+        for (int c = from; c <= to; c++) {
 
-            int flags = antiAliasing ? 0 : 65536;
-
-            if (face.loadChar(c, flags | 4)) {
-                System.err.println("glyph nf: " + c);
+            if(face.getCharIndex(c) == 0)
                 continue;
-            }
 
-            GlyphSlot glyph = face.getGlyphSlot();
-            Bitmap bitmap = glyph.getBitmap();
+            FTLoadFlags ftLoadFlags = new FTLoadFlags();
+            ftLoadFlags.set(FTLoad.RENDER);
+
+            face.loadChar(c, ftLoadFlags);
+
+            FTGlyphSlot glyph = face.getGlyph();
+            FTBitmap bitmap = glyph.getBitmap();
 
             if(c == 'A')
                 this.baseAscender = glyph.getBitmap().getRows();
 
-            int charWidth = glyph.getAdvance().getX() >> 6;
+            int charWidth = glyph.getAdvanceX() >> 6;
             int charHeight = this.maxGlyphHeight;
 
             if (atlasX + charWidth >= atlasImage.getWidth()) {
                 atlasX = 0;
-                atlasY += charHeight;
+                atlasY += charHeight + 4;
             }
 
             if (atlasY + charHeight >= atlasImage.getHeight()) {
@@ -119,20 +145,20 @@ public class Font implements IDefault, AutoCloseable {
 
             charactersMap.put(c, new int[]{atlasX, atlasY, charWidth, charHeight});
 
-            atlasX += charWidth + 1;
+            atlasX += charWidth + 4;
 
         }
 
     }
 
-    private void drawGlyphToAtlas(Bitmap bitmap, GlyphSlot glyph, int atlasX, int atlasY) {
+    private void drawGlyphToAtlas(FTBitmap bitmap, FTGlyphSlot glyph, int atlasX, int atlasY) {
 
         ByteBuffer buffer = bitmap.getBuffer();
 
         int bitmapWidth = bitmap.getWidth();
         int bitmapHeight = bitmap.getRows();
 
-        int drawY = atlasY + (face.getSize().getMetrics().getAscender() >> 6) - glyph.getBitmapTop();
+        int drawY = atlasY + (face.getSize().getMetrics().getAscender()) - glyph.getBitmapTop();
         int drawX = atlasX + glyph.getBitmapLeft();
 
         for (int j = 0; j < bitmapHeight; j++) {
@@ -171,15 +197,17 @@ public class Font implements IDefault, AutoCloseable {
 
     public int getStringWidth(String text) {
 
-        int width = 0;
-        String cleanText = removeParagraphPairs(text);
+        AtomicInteger width = new AtomicInteger();
 
-        for (char c : cleanText.toCharArray())
+        text = removeParagraphPairs(text);
+
+        text.codePoints().forEach(c -> {
             if(charactersMap.containsKey(c))
-                width += charactersMap.get(c)[2];
-            else width += charactersMap.get('?')[2];
+                width.addAndGet(charactersMap.get(c)[2]);
+            else width.addAndGet(charactersMap.get((int) '?')[2]);
+        });
 
-        return width;
+        return width.get();
 
     }
 
@@ -197,10 +225,10 @@ public class Font implements IDefault, AutoCloseable {
 
             if (c == '\u00A7') continue;
 
-            int[] charData = charactersMap.get(c);
+            int[] charData = charactersMap.get((int)c);
 
             if (charData == null) {
-                charData = charactersMap.get('?');
+                charData = charactersMap.get((int)'?');
                 if (charData == null) continue;
             }
 
@@ -255,8 +283,8 @@ public class Font implements IDefault, AutoCloseable {
     @Override
     public void close() {
 
-        if (library != null) library.delete();
-        if (face != null) face.delete();
+        if (library != null) library.done();
+        if (face != null) face.done();
 
     }
 

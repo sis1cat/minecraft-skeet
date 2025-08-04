@@ -29,22 +29,21 @@ public class Text {
 
         try {
 
+            MENU_SMALL100 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 9f);
+            MENU_SMALL125 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 11f);
+            MENU_SMALL150 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 14f);
+            MENU_SMALL175 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 16f);
+            MENU_SMALL200 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 18f);
 
-            MENU_SMALL100 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 9f, true);
-            MENU_SMALL125 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 11f, true);
-            MENU_SMALL150 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 14f, true);
-            MENU_SMALL175 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 16f, true);
-            MENU_SMALL200 = new Font(Text.class.getResourceAsStream(verdanaFontPath), 18f, true);
+            MENU_BOLD100 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 9f);
+            MENU_BOLD125 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 11f);
+            MENU_BOLD150 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 14f);
+            MENU_BOLD175 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 16f);
+            MENU_BOLD200 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 18f);
 
-            MENU_BOLD100 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 9f, true);
-            MENU_BOLD125 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 11f, true);
-            MENU_BOLD150 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 14f, true);
-            MENU_BOLD175 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 16f, true);
-            MENU_BOLD200 = new Font(Text.class.getResourceAsStream(verdanaBoldFontPath), 18f, true);
+            MENU_ICONS = new Font(Text.class.getResourceAsStream(iconsFontPath), 32f);
 
-            MENU_ICONS = new Font(Text.class.getResourceAsStream(iconsFontPath), 32f, true);
-
-            MENU_BINDS100 = new Font(Text.class.getResourceAsStream(smallFontsPath), 8f, false);
+            MENU_BINDS100 = new Font(Text.class.getResourceAsStream(smallFontsPath), 8f);
 
         }catch (Exception exception){
             throw new RuntimeException(exception);

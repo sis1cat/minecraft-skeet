@@ -4,8 +4,6 @@ import com.darkmagician6.eventapi.EventTarget;
 import com.darkmagician6.eventapi.types.Priority;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.CameraType;
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -33,6 +31,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL15.*;
@@ -386,23 +385,12 @@ public class PlayerESPFunction extends Function {
 
     }
 
-    public static String getFormattedNameWithColors(String playerName) {
+    public static String getFormattedNameWithColors(Player player) {
 
-        ClientPacketListener connection = mc.getConnection();
-
-        if (connection == null) return playerName;
-
-        final PlayerInfo playerInfo = connection.getOnlinePlayers().stream()
-                .filter(info -> info.getProfile().getName().equals(playerName))
-                .findFirst().orElse(null);
-
-        if (playerInfo == null)
-            return playerName;
-
-        Component nameComponent = playerInfo.getTabListDisplayName();
+        Component nameComponent = player.getDisplayName();
 
         if (nameComponent == null)
-            return playerName;
+            return player.getGameProfile().getName();
 
         return convertComponentToLegacy(nameComponent);
 
@@ -472,7 +460,7 @@ public class PlayerESPFunction extends Function {
             iy = animation.interpolate(iy, (float) yOffset, 50d);
 
             if(livingEntity instanceof Player player) {
-                PESPF.renderTextWithShadow(getFormattedNameWithColors(player.getGameProfile().getName()), x, y + (float) Math.floor(iy), color, true, livingEntity.alpha);
+                PESPF.renderTextWithShadow(getFormattedNameWithColors(player), x, y + (float) Math.floor(iy), color, true, livingEntity.alpha);
             } else PESPF.renderTextWithShadow(livingEntity.getName().getString(), x, y + (float) Math.floor(iy), color, true, livingEntity.alpha);
 
         }
@@ -639,7 +627,7 @@ public class PlayerESPFunction extends Function {
             v = 0,
             i = 0;
 
-    public void drawCharacter(char c, float x, float y, float[] color, float alpha) {
+    public void drawCharacter(int c, float x, float y, float[] color, float alpha) {
 
         if(vertices.length - v < 60)
             return;
@@ -745,17 +733,16 @@ public class PlayerESPFunction extends Function {
 
     }
 
-    public void drawOutlinedCharacter(char c, float x, float y, float[] color, float alpha) {
+    public void drawOutline(int c, float x, float y, float[] color, float alpha) {
 
         if(vertices.length - v < 60)
             return;
 
         int[] charData = Text.getMenuFont().charactersMap.get(c);
-        int charX = charData[0];
-        int charY = charData[1];
-        int charWidth = charData[2];
-        int charHeight = charData[3] + 1; // for lower outline pixels
-        y -= 1; // compensate
+        int charX = charData[0] - 1;
+        int charY = charData[1] - 1;
+        int charWidth = charData[2] + 2;
+        int charHeight = charData[3] + 2;
 
         float tx = (float) charX / 2048;
         float ty = (float) (charY + charHeight) / 2048;
@@ -1161,14 +1148,14 @@ public class PlayerESPFunction extends Function {
 
     }
 
-    public void renderText(String text, float x, float y, float[] color, boolean minecraftColored, float alpha, boolean outlined) {
+    public void renderText(String text, float x, float y, float[] color, boolean minecraftColored, float alpha) {
 
         if (vertices.length - v < 56) {
             //IDefault.displayClientChatMessage("ESP: Too many objects for render.");
             return;
         }
 
-        y = Window.gameWindowSize.y - y - Text.getMenuFont().glyphRenderOffset + (outlined ? -1 : 0);
+        y = Window.gameWindowSize.y - y - Text.getMenuFont().glyphRenderOffset;
 
         float[] lastColor = new float[]{color[0], color[1], color[2], color[3]};
 
@@ -1178,9 +1165,13 @@ public class PlayerESPFunction extends Function {
         int hexColorIndex = 0;
         StringBuilder hexColor = new StringBuilder(0);
 
-        for (int i = 0; i < text.length(); i++) {
+        int[] codePoints = new int[(int) text.codePoints().count()];
 
-            char c = text.charAt(i);
+        AtomicInteger i = new AtomicInteger(0);
+
+        text.codePoints().forEach(codePoint -> codePoints[i.getAndAdd(1)] = codePoint);
+
+        for (int c : codePoints) {
 
             if (isHexColor && minecraftColored) {
                 if (hexColorIndex < 6) {
@@ -1188,11 +1179,13 @@ public class PlayerESPFunction extends Function {
                     if (c == '\u00A7')
                         continue;
 
-                    hexColor.append(c);
+                    hexColor.append((char) c);
                     hexColorIndex++;
 
                     if (hexColorIndex == 6) {
+
                         int intHexColor = Integer.parseInt(hexColor.toString(), 16);
+
                         lastColor[0] = (float) ((intHexColor >> 16) & 0xFF);
                         lastColor[1] = (float) ((intHexColor >> 8) & 0xFF);
                         lastColor[2] = (float) (intHexColor & 0xFF);
@@ -1246,15 +1239,106 @@ public class PlayerESPFunction extends Function {
                 charData = Text.getMenuFont().charactersMap.get(c);
             }
 
-            if (c == 9889) {
-                c = '\u03de';
+            drawCharacter(c, (int) x, (int) y, lastColor, alpha);
+
+            x += charData[2];
+
+        }
+
+    }
+
+    public void renderOutline(String text, float x, float y, float[] color, boolean minecraftColored, float alpha) {
+
+        if (vertices.length - v < 56) {
+            //IDefault.displayClientChatMessage("ESP: Too many objects for render.");
+            return;
+        }
+
+        y = Window.gameWindowSize.y - y - Text.getMenuFont().glyphRenderOffset;
+
+        float[] lastColor = new float[]{color[0], color[1], color[2], color[3]};
+
+        boolean isNextColor = false;
+        boolean isHexColor = false;
+
+        int hexColorIndex = 0;
+        StringBuilder hexColor = new StringBuilder(0);
+
+        int[] codePoints = new int[(int) text.codePoints().count()];
+
+        AtomicInteger i = new AtomicInteger(0);
+
+        text.codePoints().forEach(codePoint -> codePoints[i.getAndAdd(1)] = codePoint);
+
+        for (int c : codePoints) {
+
+            if (isHexColor && minecraftColored) {
+                if (hexColorIndex < 6) {
+
+                    if (c == '\u00A7')
+                        continue;
+
+                    hexColor.append((char) c);
+                    hexColorIndex++;
+
+                    if (hexColorIndex == 6) {
+
+                        int intHexColor = Integer.parseInt(hexColor.toString(), 16);
+
+                        lastColor[0] = (float) ((intHexColor >> 16) & 0xFF);
+                        lastColor[1] = (float) ((intHexColor >> 8) & 0xFF);
+                        lastColor[2] = (float) (intHexColor & 0xFF);
+                        isHexColor = false;
+                    }
+                }
+                continue;
+            }
+
+            if (isNextColor && minecraftColored) {
+                if (c == 'x') {
+                    isHexColor = true;
+                    hexColorIndex = 0;
+                    hexColor = new StringBuilder(0);
+                } else {
+                    lastColor =
+                            switch (c) {
+                                case 'a' -> new float[]{85, 255, 85, lastColor[3]};
+                                case 'b' -> new float[]{85, 255, 255, lastColor[3]};
+                                case 'c' -> new float[]{255, 85, 85, lastColor[3]};
+                                case 'd' -> new float[]{255, 85, 255, lastColor[3]};
+                                case 'e' -> new float[]{255, 255, 85, lastColor[3]};
+                                case 'f' -> new float[]{color[0], color[1], color[2], lastColor[3]};
+                                case 'l', 'r' -> new float[]{color[0], color[1], color[2], lastColor[3]};
+                                case '0' -> new float[]{0, 0, 0, lastColor[3]};
+                                case '1' -> new float[]{0, 0, 170, lastColor[3]};
+                                case '2' -> new float[]{0, 170, 0, lastColor[3]};
+                                case '3' -> new float[]{0, 170, 170, lastColor[3]};
+                                case '4' -> new float[]{170, 0, 0, lastColor[3]};
+                                case '5' -> new float[]{170, 0, 170, lastColor[3]};
+                                case '6' -> new float[]{255, 170, 0, lastColor[3]};
+                                case '7' -> new float[]{170, 170, 170, lastColor[3]};
+                                case '8' -> new float[]{85, 85, 85, lastColor[3]};
+                                case '9' -> new float[]{85, 85, 255, lastColor[3]};
+                                default -> lastColor;
+                            };
+                }
+                isNextColor = false;
+                continue;
+            }
+
+            if (c == '\u00A7') {
+                isNextColor = true;
+                continue;
+            }
+
+            int[] charData = Text.getMenuFont().charactersMap.get(c);
+
+            if (charData == null) {
+                c = '?';
                 charData = Text.getMenuFont().charactersMap.get(c);
             }
 
-            if (outlined)
-                drawOutlinedCharacter(c, (int) x, (int) y, lastColor, alpha);
-            else
-                drawCharacter(c, (int) x, (int) y, lastColor, alpha);
+            drawOutline(c, (int) x, (int) y, lastColor, alpha);
 
             x += charData[2];
 
@@ -1265,20 +1349,21 @@ public class PlayerESPFunction extends Function {
     public void renderTextWithShadow(String text, float x, float y, float[] color, boolean centered, float alpha){
 
         if(Window.windowScale == 1) {
-            renderOutlinedText(text, x, y, color, Color.c12, centered, true, alpha);
+            renderOutlinedText(text, x, y, color, centered, true, alpha);
             return;
         }
 
-        renderText(Font.removeParagraphPairs(text), x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0) + 1, y + 1, new float[]{12, 12, 12, color[3]}, false, alpha, false);
-        renderText(text, x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0) , y , color, true, alpha, false);
+        this.renderText(Font.removeParagraphPairs(text), x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0), y, new float[]{12, 12, 12, color[3]}, false, alpha);
+        this.renderText(text, x + (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0) , y - 1, color, true, alpha);
 
     }
 
-    public void renderOutlinedText(String text, float x, float y, float[] textColor, float[] outlineColor, boolean centered, boolean minecraftColored, float alpha){
+    public void renderOutlinedText(String text, float x, float y, float[] textColor, boolean centered, boolean minecraftColored, float alpha){
 
         x += (centered ? -Text.getMenuFont().getStringWidth(text) / 2f : 0);
 
-        this.renderText(text, x, y, textColor, minecraftColored, alpha, true);
+        this.renderOutline(text, x - 1, y, textColor, minecraftColored, alpha);
+        this.renderText(text, x, y - 1, textColor, minecraftColored, alpha);
 
     }
 
@@ -1821,8 +1906,6 @@ public class PlayerESPFunction extends Function {
                             float atlasSize = 2048.0;
                             float pixelSize = 1.0 / atlasSize;
                             
-                            vec4 sampledText = vec4(rectanglePosition, rectangleSize.x, 1) * texture(menuFont, fragTex);
-
                             vec4 sampledOutline = (
                                 texture(menuFont, fragTex + vec2(pixelSize, pixelSize)) +
                                 texture(menuFont, fragTex + vec2(-pixelSize, -pixelSize)) +
@@ -1834,17 +1917,9 @@ public class PlayerESPFunction extends Function {
                                 texture(menuFont, fragTex + vec2(pixelSize, 0))
                             );
                             
-                            vec3 blackjopcasino = vec3(12.0 / 255.0, 12.0 / 255.0, 12.0 / 255.0);
+                            sampledOutline.rgb = vec3(12.0 / 255.0, 12.0 / 255.0, 12.0 / 255.0);
                             
-                            if(sampledOutline.a > 0) {
-                                sampledOutline.rgb = blackjopcasino;
-                                //sampledOutline.a = 1;
-                            }
-                            
-                            vec4 finalColor;
-                            finalColor.rgb = sampledText.rgb * sampledText.a + sampledOutline.rgb * (1.0 - sampledText.a);
-                            finalColor.a = max(sampledOutline.a, sampledText.a);
-                            FragColor = finalColor;
+                            FragColor = sampledOutline;
                             
                             FragColor.a *= rectangleSize.y;
                             FragColor.a *= espAlpha / 255.0;

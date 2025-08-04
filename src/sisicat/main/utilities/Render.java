@@ -630,7 +630,7 @@ public class Render implements IDefault {
 
     public static void drawCharacter(char c, float x, float y, float[] color, float alpha, Font font) {
 
-        int[] charData = font.charactersMap.get(c);
+        int[] charData = font.charactersMap.get((int)c);
         int charX = charData[0];
         int charY = charData[1];
         int charWidth = charData[2];
