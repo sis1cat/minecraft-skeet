@@ -159,7 +159,7 @@ public class Slider extends Widget {
 
         String textValue = truncateToUnitSize(functionSetting.getFloatValue(), functionSetting.getUnitSize()) + functionSetting.getUnitName();
 
-        Text.getMenuBoldFont().renderOutlinedText(textValue, this.x + (valueWidth - (float) Text.getMenuBoldFont().getStringWidth(textValue) / 2), this.y + widgetHeight - (int)((float) Text.getMenuBoldFont().getBaseAscender() / 2 + 1), Color.c190, new float[]{0, 0, 0, 150}, 255);
+        Text.getMenuBoldFont().renderOutlinedText(textValue, this.x + (valueWidth - (float) Text.getMenuBoldFont().getStringWidth(textValue) / 2), this.y + widgetHeight - (int)((float) Text.getMenuBoldFont().getBaseAscender() / 2 + 1), Color.c190, new float[]{0, 0, 0, 150});
 
     }
 

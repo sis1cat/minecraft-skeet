@@ -116,7 +116,7 @@ public class Bind extends Widget {
             Text.getMenuBindsFont().renderOutlinedText(
                     keyBindName, this.x, this.y + 1,
                     Bind.bindingElementName.equals(name) ? Color.red : isWidgetHovered ? Color.c140 : Color.c115,
-                    Color.c15, 255
+                    Color.c15
             );
         else
             Text.getMenuBindsFont().renderTextWithShadow(

@@ -203,16 +203,15 @@ public class LocalPlayer extends AbstractClientPlayer {
     public float getViewYRot(float pPartialTick) {
         return this.isPassenger() ? super.getViewYRot(pPartialTick) : this.getYRot();
     }
-    float lastrot = 0;
+
     @Override
     public void tick() {
         this.tickClientLoadTimeout();
         if (this.hasClientLoaded()) {
             this.dropSpamThrottler.tick();
-
             EventManager.call(new TickEvent());
-
             super.tick();
+
 
             this.sendShiftKeyState();
             if (!this.lastSentInput.equals(this.input.keyPresses)) {

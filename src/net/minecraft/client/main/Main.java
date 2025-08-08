@@ -79,7 +79,7 @@ public class Main {
         OptionSpec<Integer> optionspec11 = optionparser.accepts("proxyPort").withRequiredArg().defaultsTo("8080").ofType(Integer.class);
         OptionSpec<String> optionspec12 = optionparser.accepts("proxyUser").withRequiredArg();
         OptionSpec<String> optionspec13 = optionparser.accepts("proxyPass").withRequiredArg();
-        OptionSpec<String> optionspec14 = optionparser.accepts("username").withRequiredArg().defaultsTo("re23wde123");
+        OptionSpec<String> optionspec14 = optionparser.accepts("username").withRequiredArg().defaultsTo("andre2559");
         OptionSpec<String> optionspec15 = optionparser.accepts("uuid").withRequiredArg(); // ай-ай, нехорошо пастить, одумайся
         OptionSpec<String> optionspec16 = optionparser.accepts("xuid").withOptionalArg().defaultsTo("");
         OptionSpec<String> optionspec17 = optionparser.accepts("clientId").withOptionalArg().defaultsTo("");

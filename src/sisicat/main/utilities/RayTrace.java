@@ -56,42 +56,6 @@ public class RayTrace implements IDefault {
 
     }
 
-    public static EntityHitResult getEntityHitResult(Entity pShooter, Vec3 pStartVec, Vec3 pEndVec, AABB pBoundingBox, Predicate<Entity> pFilter, double pDistance) {
-        Level level = pShooter.level();
-        double d0 = pDistance;
-        Entity entity = null;
-        Vec3 vec3 = null;
-
-        for (Entity entity1 : level.getEntities(pShooter, pBoundingBox, pFilter)) {
-            AABB aabb = entity1.getBoundingBox().inflate(1.0D);
-            Optional<Vec3> optional = aabb.clip(pStartVec, pEndVec);
-            if (aabb.contains(pStartVec)) {
-                if (d0 >= 0.0) {
-                    entity = entity1;
-                    vec3 = optional.orElse(pStartVec);
-                    d0 = 0.0;
-                }
-            } else if (optional.isPresent()) {
-                Vec3 vec31 = optional.get();
-                double d1 = pStartVec.distanceToSqr(vec31);
-                if (d1 < d0 || d0 == 0.0) {
-                    if (entity1.getRootVehicle() == pShooter.getRootVehicle()) {
-                        if (d0 == 0.0) {
-                            entity = entity1;
-                            vec3 = vec31;
-                        }
-                    } else {
-                        entity = entity1;
-                        vec3 = vec31;
-                        d0 = d1;
-                    }
-                }
-            }
-        }
-
-        return entity == null ? null : new EntityHitResult(entity, vec3);
-    }
-
     public static HitResult getHitResult(float yaw, float pitch, double distance, int mode) {
 
         HitResult hitResult;
@@ -109,9 +73,9 @@ public class RayTrace implements IDefault {
         AABB aabb = cameraEntity.getBoundingBox().expandTowards(rotationVector.scale(distance)).inflate(1.0D, 1.0D, 1.0D);
 
         EntityHitResult entityhitresult =
-                getEntityHitResult(
+                ProjectileUtil.getEntityHitResult(
                         cameraEntity, cameraEyePosition, stretchedVector, aabb,
-                        (entity) -> !entity.isSpectator() && entity.isPickable(), mode == 1 ? 6 : distanceToPickedBlock
+                        (entity) -> !entity.isSpectator() && entity.isPickable(), mode == 1 ? 36 : distanceToPickedBlock
                 );
 
         if (entityhitresult != null) {

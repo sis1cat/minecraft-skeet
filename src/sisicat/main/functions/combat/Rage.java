@@ -2,7 +2,6 @@ package sisicat.main.functions.combat;
 
 import com.darkmagician6.eventapi.EventTarget;
 import com.darkmagician6.eventapi.types.Priority;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -214,6 +213,14 @@ public class Rage extends Function implements IDefault {
 
     }
 
+    public static Vec2 getPointOnCircle(float radius, float degrees) {
+        float radians = (float) Math.toRadians(degrees);
+        float x = radius * (float) Math.cos(radians);
+        float z = radius * (float) Math.sin(radians);
+        return new Vec2(x, z);
+    }
+
+
     @EventTarget(value = Priority.HIGHEST)
     void _event(TickEvent ignored) {
 
@@ -224,6 +231,13 @@ public class Rage extends Function implements IDefault {
 
         startSettingUp();
 
+        /*currentRotation.x += applySensitivityMultiplier(mc.player.getYRot() - currentRotation.x);
+        currentRotation.y += applySensitivityMultiplier(mc.player.getXRot() - currentRotation.y);
+
+        if(mc.crosshairPickEntity instanceof LivingEntity livingEntity)
+            currentTarget = livingEntity;
+        else currentTarget = null;*/
+
         currentTarget = sortTarget();
 
         if(!removedBPS.isEmpty()) {
@@ -231,6 +245,7 @@ public class Rage extends Function implements IDefault {
             for (LivingEntity.BacktrackProperty removedBP : removedBPS) {
                 LivingEntity livingEntity = removedBP.livingEntity();
                 if (
+                        livingEntity.isAlive() &&
                         livingEntity.tickCount - removedBP.timePoint() <= backtrack.floatValue
                 )   livingEntity.backtrackProperties.add(removedBP);
 
@@ -240,17 +255,61 @@ public class Rage extends Function implements IDefault {
 
         }
 
-        final Vec2 rotation = getRawRotationToTarget();
-
-        if (currentTarget.distanceTo(mc.player) > this.attackDistance.getFloatValue() + 1 || rotation == null)
+        if(currentTarget == null) {
             rotate(new Vec2(mc.player.getYRot(), mc.player.getXRot()));
-        else
-            rotate(rotation);
+            return;
+        }
 
-        breakShield();
+        Vec2 rotation;
 
-        if (canBeAttacked() && isTargetPicked() && isFalling())
-            attackTarget();
+        if(mc.player.isFallFlying()) {
+
+            if (currentTarget.distanceTo(mc.player) > this.attackDistance.getFloatValue() + 1) {
+
+                final AABB aabb = currentTarget.getBoundingBox();
+
+                rotation = getRawRotationToVec3(
+                        (float) aabb.minX + (float) aabb.getXsize() / 2f,
+                        (float) Math.clamp(mc.player.getEyeY(), aabb.minY, aabb.maxY),
+                        (float) aabb.minZ + (float) aabb.getZsize() / 2f
+                );
+
+            } else if (!canBeAttacked()) {
+
+                final Vec2 circleOffsets = getPointOnCircle(0.5f, 90 * ((float) (mc.player.tickCount % 5)));
+
+                final AABB aabb = currentTarget.getBoundingBox();
+
+                rotation = getRawRotationToVec3(
+                        (float) aabb.minX + (float) aabb.getXsize() / 2f + circleOffsets.x,
+                        (float) aabb.maxY + (mc.player.fallDistance > 0 ? 0 : -0.2f),
+                        (float) aabb.minZ + (float) aabb.getZsize() / 2f + circleOffsets.y
+                );
+
+            } else rotation = getRawRotationToTarget();
+
+        } else {
+
+            rotation = getRawRotationToTarget();
+
+            if (currentTarget.distanceTo(mc.player) > this.attackDistance.getFloatValue() + 1)
+                rotation = new Vec2(mc.player.getYRot(), mc.player.getXRot());
+
+        }
+
+        if(rotation == null)
+            rotation = new Vec2(mc.player.getYRot(), mc.player.getXRot());
+
+        rotate(rotation);
+
+        if(mc.player.tickCount % 3 != 0) {
+
+            breakShield();
+
+            if (canBeAttacked() && isTargetPicked() && isFalling())
+                attackTarget();
+
+        }
 
     }
 
@@ -266,9 +325,16 @@ public class Rage extends Function implements IDefault {
     @EventTarget
     void _event(MovementUpdateEvent movementUpdateEvent) {
 
-
         if (!this.isActivated() || !mc.player.isAlive())
             return;
+
+        if(movementUpdateEvent.getType() == MovementUpdateEvent.TYPE.POST && mc.player.tickCount % 3 == 0) {
+            breakShield();
+
+            if (canBeAttacked() && isTargetPicked() && isFalling())
+                attackTarget();
+
+        }
 
         if (movementUpdateEvent.getType() != MovementUpdateEvent.TYPE.PRE)
             return;
@@ -417,7 +483,7 @@ public class Rage extends Function implements IDefault {
 
         return
                 currentTarget.hurtTime == 0 &&
-                mc.player.getAttackStrengthScale(0.5F) > 0.9F;
+                mc.player.getAttackStrengthScale(1.0F) > 0.9F;
 
     }
 
@@ -457,7 +523,7 @@ public class Rage extends Function implements IDefault {
 
         boolean isPacketSRM = sprintResetMode.getStringValue().equals("Packet");
 
-        if(!isPacketSRM) {
+        if(!isPacketSRM && !mc.player.isFallFlying()) {
 
             if (legitStopSprinting == 0)
                 legitStopSprinting = 2 + (int) sprintResetMode.floatValue;
@@ -467,10 +533,10 @@ public class Rage extends Function implements IDefault {
 
         }
 
-        if(forceCriticalAttack.getStringValue().equals("Packet"))
+        if(forceCriticalAttack.getStringValue().equals("Packet") && !mc.player.isFallFlying())
             mc.player.connection.send(new ServerboundMovePlayerPacket.StatusOnly(false, mc.player.horizontalCollision));
 
-        if(isPacketSRM) {
+        if(isPacketSRM && !mc.player.isFallFlying()) {
 
             boolean wasSprinting = false;
 
@@ -490,8 +556,8 @@ public class Rage extends Function implements IDefault {
         } else
             this.sendAttackPacket();
 
-        if(this.getNearestBacktrack() != null)
-            IDefault.displayClientChatMessage("  Tracked player at: " + (currentTarget.tickCount - this.getNearestBacktrack().timePoint()) + "t old AABB");
+        //if(this.getNearestBacktrack() != null)
+        //    IDefault.displayClientChatMessage("  Tracked player at: " + (currentTarget.tickCount - this.getNearestBacktrack().timePoint()) + "t old AABB");
 
     }
 
@@ -561,7 +627,7 @@ public class Rage extends Function implements IDefault {
 
         currentTarget.setBoundingBox(lastAABB);
 
-        return hitResult instanceof EntityHitResult && ((EntityHitResult) hitResult).getEntity() == currentTarget;
+        return hitResult instanceof EntityHitResult;
 
     }
 
@@ -581,6 +647,8 @@ public class Rage extends Function implements IDefault {
 
     }
 
+    private Vec2 prevRotation = new Vec2(0, 0);
+
     public void rotate(Vec2 to) {
 
         float
@@ -589,15 +657,26 @@ public class Rage extends Function implements IDefault {
 
         final float
                 yawLimit = 45f + (float) Math.random() * 15f,
-                pitchLimit = 10f + (float) Math.random() * 5f;
+                pitchLimit = 20f + (float) Math.random() * 5f;
 
-        float yawDelta = Mth.clamp(rawYawDelta * (0.75f + (float) Math.random() * 0.05f), -yawLimit, yawLimit);
-        float pitchDelta = Mth.clamp(rawPitchDelta * (0.65f + (float) Math.random() * 0.05f), -pitchLimit, pitchLimit);
+        float yawDelta = Mth.clamp(rawYawDelta, -yawLimit, yawLimit);
+        float pitchDelta = Mth.clamp(rawPitchDelta, -pitchLimit, pitchLimit);
 
-        currentRotation.x += applySensitivityMultiplier(yawDelta + (float) Math.random() * 2f - 1f);
-        currentRotation.y += applySensitivityMultiplier(pitchDelta + (float) Math.random() * 2f - 1f);
+        currentRotation.x += applySensitivityMultiplier(yawDelta);
+        currentRotation.y += applySensitivityMultiplier(pitchDelta);
 
         currentRotation.y = Mth.clamp(currentRotation.y, -90f, 90f);
+
+        final float
+                prevYawDelta = currentRotation.x - prevRotation.x,
+                prevPitchDelta = currentRotation.y - prevRotation.y;
+
+        prevRotation = new Vec2(currentRotation.x, currentRotation.y);
+
+        if(prevYawDelta != 0 && prevPitchDelta != 0) {
+            currentRotation.x += applySensitivityMultiplier((float) Math.random() * 2 - 1);
+            currentRotation.y += applySensitivityMultiplier((float) Math.random() * 2 - 1);
+        }
 
     }
 
@@ -615,7 +694,7 @@ public class Rage extends Function implements IDefault {
         double d5 = getSensitivityMultiplier();
 
         double step = d5 * 0.15;
-        int noiseSteps = Math.max(2, (int)(Math.random() * 6));
+        int noiseSteps = 3;
 
         return (float) (Math.round((double)(angle / 0.15f) / d5) * d5) * 0.15f + noiseSteps * (float) step;
 
@@ -645,6 +724,21 @@ public class Rage extends Function implements IDefault {
             return null;
 
         return currentTarget.backtrackProperties.getFirst();
+
+    }
+
+    private Vec2 getRawRotationToVec3(float x, float y, float z) {
+
+        final double
+                xDifference = x - mc.player.getX(),
+                yDifference = y - mc.player.getEyeY(),
+                zDifference = z - mc.player.getZ();
+
+        return RayTrace.getRotationForDifferences(
+                xDifference,
+                yDifference,
+                zDifference
+        );
 
     }
 
@@ -917,7 +1011,7 @@ public class Rage extends Function implements IDefault {
 
         currentTarget.setBoundingBox(lastAABB);
 
-        if (!(hitResult instanceof EntityHitResult entityHitResult) || entityHitResult.getEntity().getId() != currentTarget.getId()) {
+        if (!(hitResult instanceof EntityHitResult)) {
             if(backtrackProperty != null) {
                 removedBPS.add(backtrackProperty);
                 currentTarget.backtrackProperties.remove(backtrackProperty);

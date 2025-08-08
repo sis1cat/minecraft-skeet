@@ -196,6 +196,7 @@ public class PlayerESPFunction extends Function {
         float size = (100f * ((mc.options.fov().get() <= 70f ? 70f : 70 / ((float)mc.gameRenderer.getFov(mc.getEntityRenderDispatcher().camera, mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), true) / 70f)) / (float)mc.gameRenderer.getFov(mc.getEntityRenderDispatcher().camera, mc.getDeltaTracker().getRealtimeDeltaTicks(), true))) * (6 / distance);
 
         Render.drawCircle((int)(onScreenCoordinates.x - size / 2), (int)(onScreenCoordinates.y - size / 2), (int)size, visualizeAimbotColor.getRGBAColor(), visualizeAimbotColor.getRGBAColor()[3]);
+
     }
 
     public void drawESP(LivingEntity livingEntity) {
@@ -381,6 +382,7 @@ public class PlayerESPFunction extends Function {
 
         public int priority = 0;
         public float iy = -1;
+        public float iy2 = -1;
         public final Animation animation = new Animation();
 
     }
@@ -457,11 +459,20 @@ public class PlayerESPFunction extends Function {
             if(iy == -1)
                 iy = yOffset;
 
+            if(iy2 == -1)
+                iy2 = livingEntity instanceof Player player ?
+                        (float) -Text.getMenuFont().getStringWidth(getFormattedNameWithColors(player)) / 2f :
+                        (float) -Text.getMenuFont().getStringWidth(livingEntity.getName().getString()) / 2f;
+
             iy = animation.interpolate(iy, (float) yOffset, 50d);
+            iy2 =
+                    livingEntity instanceof Player player ?
+                            animation.interpolate(iy2, (float) -Text.getMenuFont().getStringWidth(getFormattedNameWithColors(player)) / 2f, 50d) :
+                            animation.interpolate(iy2, (float) -Text.getMenuFont().getStringWidth(livingEntity.getName().getString()) / 2f, 50d);
 
             if(livingEntity instanceof Player player) {
-                PESPF.renderTextWithShadow(getFormattedNameWithColors(player), x, y + (float) Math.floor(iy), color, true, livingEntity.alpha);
-            } else PESPF.renderTextWithShadow(livingEntity.getName().getString(), x, y + (float) Math.floor(iy), color, true, livingEntity.alpha);
+                PESPF.renderTextWithShadow(getFormattedNameWithColors(player), x + iy2, y + (float) Math.floor(iy), color, false, livingEntity.alpha);
+            } else PESPF.renderTextWithShadow(livingEntity.getName().getString(), x + iy2, y + (float) Math.floor(iy), color, false, livingEntity.alpha);
 
         }
 
