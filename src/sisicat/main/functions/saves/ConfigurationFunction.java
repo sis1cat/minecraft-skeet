@@ -6,6 +6,7 @@ import sisicat.events.GraphicsEvent;
 import sisicat.main.Config;
 import sisicat.main.functions.Function;
 import sisicat.main.functions.FunctionSetting;
+import sisicat.main.functions.FunctionsManager;
 import sisicat.main.gui.elements.widgets.Configs;
 
 import java.io.File;
@@ -19,7 +20,7 @@ public class ConfigurationFunction extends Function {
             save,
             delete,
             reset,
-            importFromClipBoard,
+            importFromClipboard,
             exportToClipboard;
 
     public ConfigurationFunction(String name) {
@@ -30,14 +31,15 @@ public class ConfigurationFunction extends Function {
         save = new FunctionSetting("Save");
         delete = new FunctionSetting("Delete");
         reset = new FunctionSetting("Reset");
-        importFromClipBoard = new FunctionSetting("Import from clipboard");
+        importFromClipboard = new FunctionSetting("Import from clipboard");
         exportToClipboard = new FunctionSetting("Export to clipboard");
 
         this.addSetting(edit);
         this.addSetting(load);
         this.addSetting(save);
         this.addSetting(delete);
-        this.addSetting(importFromClipBoard);
+        this.addSetting(reset);
+        this.addSetting(importFromClipboard);
         this.addSetting(exportToClipboard);
 
         this.setCanBeActivated(true);
@@ -50,14 +52,12 @@ public class ConfigurationFunction extends Function {
         String selected = edit.getStringValue();
 
         if(load.isClicked && !selected.isEmpty()) {
-            load.isClicked = false;
             MineSense.getConfig().loadConfig(selected);
             Configs.reload();
         }
 
         if(save.isClicked && !selected.isEmpty()) {
             new Thread(() -> {
-                save.isClicked = false;
                 MineSense.getConfig().saveConfig(selected);
                 Configs.reload();
             }).start();
@@ -99,10 +99,53 @@ public class ConfigurationFunction extends Function {
                 e.printStackTrace();
             }
 
-            delete.isClicked = false;
             Configs.reload();
 
         }
+
+        if(reset.isClicked && !selected.isEmpty()) {
+
+            if(!selected.equals(Config.loaded)) {
+
+                String prevConfig = Config.loaded;
+
+                MineSense.getConfig().loadConfig(selected);
+
+                if(Objects.equals(Config.loaded, selected)) {
+
+                    for (Function function : FunctionsManager.getFunctionsArray()) {
+
+                        if (function instanceof ConfigurationFunction)
+                            continue;
+
+                        function.resetSettings();
+
+                    }
+
+                    new Thread(() -> MineSense.getConfig().saveConfig(selected)).start();
+
+                    MineSense.getConfig().loadConfig(prevConfig);
+
+                }
+
+            } else {
+
+                for (Function function : FunctionsManager.getFunctionsArray()) {
+
+                    if(function instanceof ConfigurationFunction)
+                        continue;
+
+                    function.resetSettings();
+
+                }
+            }
+
+        }
+
+        load.isClicked = false;
+        save.isClicked = false;
+        delete.isClicked = false;
+        reset.isClicked = false;
 
     }
 

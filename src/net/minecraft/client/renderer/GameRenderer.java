@@ -40,7 +40,6 @@ import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -66,7 +65,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -99,7 +97,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 import org.slf4j.Logger;
-import sisicat.IDefault;
 import sisicat.events.GraphicsEvent;
 import sisicat.events.World2DGraphics;
 import sisicat.main.functions.FunctionsManager;
@@ -763,7 +760,7 @@ public class GameRenderer implements AutoCloseable {
 
             Render.frameBuffer.bind();
 
-            GL11.glClearColor(0.0f, 0.0f, 0.0f, 0f);
+            GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
             EventManager.call(new GraphicsEvent());
@@ -771,7 +768,7 @@ public class GameRenderer implements AutoCloseable {
 
             Render.frameBuffer.unbind();
 
-            Render.drawFrameBuffer(new float[]{255, 255, 255, Widget.menuAlpha});
+            Render.writeFrameBufferTexture(new float[]{255, 255, 255, Widget.menuAlpha});
 
             Render.drawAll();
 

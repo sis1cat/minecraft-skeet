@@ -96,6 +96,7 @@ import sisicat.IDefault;
 import sisicat.events.MovementUpdateEvent;
 import sisicat.events.TickEvent;
 import sisicat.main.functions.combat.Rage;
+import sisicat.main.utilities.ServerPrediction;
 
 @OnlyIn(Dist.CLIENT)
 public class LocalPlayer extends AbstractClientPlayer {
@@ -209,7 +210,7 @@ public class LocalPlayer extends AbstractClientPlayer {
         this.tickClientLoadTimeout();
         if (this.hasClientLoaded()) {
             this.dropSpamThrottler.tick();
-            EventManager.call(new TickEvent());
+            EventManager.call(new TickEvent(false));
             super.tick();
 
 
@@ -233,6 +234,9 @@ public class LocalPlayer extends AbstractClientPlayer {
             for (AmbientSoundHandler ambientsoundhandler : this.ambientSoundHandlers) {
                 ambientsoundhandler.tick();
             }
+
+            EventManager.call(new TickEvent(true));
+
         }
 
     }
@@ -349,6 +353,9 @@ public class LocalPlayer extends AbstractClientPlayer {
     public void swing(InteractionHand pHand) {
         super.swing(pHand);
         this.connection.send(new ServerboundSwingPacket(pHand));
+
+        EventManager.call(new ServerPrediction.AttackStrengthTickerFix());
+
     }
 
     @Override

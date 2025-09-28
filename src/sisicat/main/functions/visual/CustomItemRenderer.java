@@ -66,7 +66,10 @@ public class CustomItemRenderer extends Function {
 
             ier_renderMultipleFromCount.pPoseStack.pushPose();
 
-            float[] modelProperties = ItemsRenderer.getModelProperties(item instanceof BlockItem ? (BlockItem) item : null, ier_renderMultipleFromCount.pRenderState.item, index * 0.3851f);
+            float[] modelProperties = ItemsRenderer.getModelProperties(item instanceof BlockItem ? (BlockItem) item : null, ier_renderMultipleFromCount.pRenderState.item, index * 1.0001f);
+
+            if (ier_renderMultipleFromCount.pRenderState.item.isGui3d()) ier_renderMultipleFromCount.pPoseStack.scale(0.375f, 0.375f, 0.375f);
+            else ier_renderMultipleFromCount.pPoseStack.scale(0.5f, 0.5f, 0.5f);
 
             ier_renderMultipleFromCount.pPoseStack.rotateDegYn(
                     ier_renderMultipleFromCount.pRenderState.entity.getYRot() + ier_renderMultipleFromCount.pRandom.nextFloat() * 22.5f + index * 5f
@@ -74,7 +77,7 @@ public class CustomItemRenderer extends Function {
 
             ier_renderMultipleFromCount.pPoseStack.translate(
                     (ier_renderMultipleFromCount.pRandom.nextFloat() * 2f - 1f) * 0.04f,
-                    modelProperties[4] + 0.0005f * ier_renderMultipleFromCount.pRandom.nextFloat() + ier_renderMultipleFromCount.pRenderState.entity.getId() % 50 * 0.0001f,
+                    modelProperties[4] + ier_renderMultipleFromCount.pRenderState.entity.getId() % 50 * 0.0001f,
                     (ier_renderMultipleFromCount.pRandom.nextFloat() * 2f - 1f) * 0.04f
             );
 

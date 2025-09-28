@@ -18,7 +18,7 @@ public class MenuColor extends Function {
         color =
                 new FunctionSetting(
                         "Color",
-                        new float[]{80, 0.8f, 0.8f, 1f}
+                        new float[]{77, 0.81f, 0.765f, 1f}
                 );
 
         this.addSetting(color);

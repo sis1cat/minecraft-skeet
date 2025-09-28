@@ -40,31 +40,31 @@ public class Tabs extends Widget {
         widgetWidth = Math.round(DEFAULT_WIDGET_WIDTH * Window.windowScale);
         widgetSpaceOffset = Math.round(DEFAULT_WIDGET_SPACE_OFFSET * Window.windowScale);
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x, y,
                 widgetWidth - 2, firstVerticalOffset - 2 + selectedTabOffset,
                 Color.c12, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x + widgetWidth - 2, y,
                 1, firstVerticalOffset - 1 + selectedTabOffset, 
                 new float[]{0, 0, 0}, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x, y + firstVerticalOffset - 2 + selectedTabOffset,
                 widgetWidth - 1, 1,
                 new float[]{0, 0, 0}, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x + widgetWidth - 1, y,
                 1, firstVerticalOffset + selectedTabOffset,
                  new float[]{40, 40, 40}, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x, y + firstVerticalOffset - 1  + selectedTabOffset,
                 widgetWidth, 1,
                 new float[]{40, 40, 40}, 255
@@ -77,31 +77,31 @@ public class Tabs extends Widget {
 
         int height = Window.windowHeight - (widgetSpaceOffset + 2 + firstVerticalOffset + selectedTabOffset + 16);
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x, y + widgetSpaceOffset + 2 + firstVerticalOffset + selectedTabOffset,
                 widgetWidth - 2, height,
                 Color.c12, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x + widgetWidth - 2, y + firstVerticalOffset + widgetSpaceOffset + 2 + selectedTabOffset,
                 1, height,
                 new float[]{0, 0, 0}, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x, y + firstVerticalOffset + widgetSpaceOffset + 1 + selectedTabOffset,
                 widgetWidth - 1, 1,
                 new float[]{0, 0, 0}, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x + widgetWidth - 1, y + firstVerticalOffset + widgetSpaceOffset + 1 + selectedTabOffset,
                 1, height + 1,
                 new float[]{40, 40, 40}, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 x, y + firstVerticalOffset + widgetSpaceOffset + selectedTabOffset,
                 widgetWidth, 1,
                 new float[]{40, 40, 40}, 255

@@ -1,6 +1,7 @@
 package sisicat.main.functions.visual;
 
 import com.darkmagician6.eventapi.EventTarget;
+import com.darkmagician6.eventapi.events.callables.EventCancellable;
 import com.darkmagician6.eventapi.types.Priority;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.CameraType;
@@ -48,6 +49,11 @@ public class PlayerESPFunction extends Function {
 
             visualizeAimbot = new FunctionSetting("Visualize aimbot"),
             visualizeAimbotColor = new FunctionSetting("Dot color", new float[]{220, 0.5f, 1, 0.4f}),
+            hitMarkerSound = new FunctionSetting(
+                    "Hit marker sound",
+                    null,
+                    "skeet"
+            ),
 
             boundingBox = new FunctionSetting("Bounding box"),
             bbBorderColor = new FunctionSetting("bb Border color", new float[]{215, 0.5f, 1f, 0.78f}),
@@ -71,8 +77,11 @@ public class PlayerESPFunction extends Function {
             armorIcons = new FunctionSetting("Armor icons"),
             armorIconsColor = new FunctionSetting("Armor icons color", new float[]{1f, 1f, 1f, 1f});
 
-    private final float[] vertices = new float[14 * 4 * 2000];
-    private final int[] indices = new int[6 * 2000];
+    private final float[] vertices = new float[14 * 4 * 500];
+    private final int[] indices = new int[6 * 500];
+
+    private int totalVerticesUploaded = 0;
+    private int totalIndicesUploaded = 0;
 
     private final int
             vao,
@@ -88,6 +97,7 @@ public class PlayerESPFunction extends Function {
 
                 this.visualizeAimbot,
                 this.visualizeAimbotColor,
+                this.hitMarkerSound,
 
                 this.shieldBreakSound,
 
@@ -127,10 +137,10 @@ public class PlayerESPFunction extends Function {
         glBindVertexArray(vao);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 14 * 4 * 5000 * Float.BYTES, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 5000 * Integer.BYTES, GL_DYNAMIC_DRAW);
 
         int stride = 14 * Float.BYTES;
 
@@ -158,6 +168,20 @@ public class PlayerESPFunction extends Function {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
+    }
+
+    @EventTarget
+    void _event(CriticalSoundEvent criticalSoundEvent) {
+
+        if(!hitMarkerSound.isActivated())
+            return;
+
+        criticalSoundEvent.cancel();
+        SoundPlayer.play(hitMarkerSound.stringValue);
+
+    }
+
+    public static class CriticalSoundEvent extends EventCancellable {
     }
 
     private Vec3 aimbotDot = new Vec3(0, 0, 0);
@@ -191,11 +215,15 @@ public class PlayerESPFunction extends Function {
                 finalDotPosition.x, finalDotPosition.y, finalDotPosition.z
         );
 
-        distance = Mth.lerp(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), distance, (float) finalDotPosition.distanceTo(mc.getEntityRenderDispatcher().camera.getPosition()));
+        if(onScreenCoordinates != null) {
 
-        float size = (100f * ((mc.options.fov().get() <= 70f ? 70f : 70 / ((float)mc.gameRenderer.getFov(mc.getEntityRenderDispatcher().camera, mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), true) / 70f)) / (float)mc.gameRenderer.getFov(mc.getEntityRenderDispatcher().camera, mc.getDeltaTracker().getRealtimeDeltaTicks(), true))) * (6 / distance);
+            distance = Mth.lerp(mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), distance, (float) finalDotPosition.distanceTo(mc.getEntityRenderDispatcher().camera.getPosition()));
 
-        Render.drawCircle((int)(onScreenCoordinates.x - size / 2), (int)(onScreenCoordinates.y - size / 2), (int)size, visualizeAimbotColor.getRGBAColor(), visualizeAimbotColor.getRGBAColor()[3]);
+            float size = (100f * ((mc.options.fov().get() <= 70f ? 70f : 70 / ((float) mc.gameRenderer.getFov(mc.getEntityRenderDispatcher().camera, mc.getDeltaTracker().getGameTimeDeltaPartialTick(true), true) / 70f)) / (float) mc.gameRenderer.getFov(mc.getEntityRenderDispatcher().camera, mc.getDeltaTracker().getRealtimeDeltaTicks(), true))) * (6 / distance);
+
+            this.writeCircle((int) (onScreenCoordinates.x - size / 2), (int) (onScreenCoordinates.y - size / 2), (int) size);
+
+        }
 
     }
 
@@ -384,6 +412,7 @@ public class PlayerESPFunction extends Function {
         public float iy = -1;
         public float iy2 = -1;
         public final Animation animation = new Animation();
+        public final Animation animation2 = new Animation();
 
     }
 
@@ -467,8 +496,8 @@ public class PlayerESPFunction extends Function {
             iy = animation.interpolate(iy, (float) yOffset, 50d);
             iy2 =
                     livingEntity instanceof Player player ?
-                            animation.interpolate(iy2, (float) -Text.getMenuFont().getStringWidth(getFormattedNameWithColors(player)) / 2f, 50d) :
-                            animation.interpolate(iy2, (float) -Text.getMenuFont().getStringWidth(livingEntity.getName().getString()) / 2f, 50d);
+                            animation2.interpolate(iy2, (float) -Text.getMenuFont().getStringWidth(getFormattedNameWithColors(player)) / 2f, 50d) :
+                            animation2.interpolate(iy2, (float) -Text.getMenuFont().getStringWidth(livingEntity.getName().getString()) / 2f, 50d);
 
             if(livingEntity instanceof Player player) {
                 PESPF.renderTextWithShadow(getFormattedNameWithColors(player), x + iy2, y + (float) Math.floor(iy), color, false, livingEntity.alpha);
@@ -641,7 +670,9 @@ public class PlayerESPFunction extends Function {
     public void drawCharacter(int c, float x, float y, float[] color, float alpha) {
 
         if(vertices.length - v < 60)
-            return;
+            this.uploadBuffers();
+
+        int localVertexOffset = v / 14;
 
         int[] charData = Text.getMenuFont().charactersMap.get(c);
         int charX = charData[0];
@@ -731,15 +762,12 @@ public class PlayerESPFunction extends Function {
         vertices[v++] = 0;
         vertices[v++] = (float) Math.floor(alpha);
 
-
-        int start = v / 14 - 4;
-
-        indices[i++] = start;
-        indices[i++] = 1 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 3 + start;
-        indices[i++] = start;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 1 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 3 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
 
 
     }
@@ -747,7 +775,9 @@ public class PlayerESPFunction extends Function {
     public void drawOutline(int c, float x, float y, float[] color, float alpha) {
 
         if(vertices.length - v < 60)
-            return;
+            this.uploadBuffers();
+
+        int localVertexOffset = v / 14;
 
         int[] charData = Text.getMenuFont().charactersMap.get(c);
         int charX = charData[0] - 1;
@@ -841,15 +871,12 @@ public class PlayerESPFunction extends Function {
         vertices[v++] = 0;
         vertices[v++] = (float) Math.floor(alpha);
 
-
-        int start = v / 14 - 4;
-
-        indices[i++] = start;
-        indices[i++] = 1 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 3 + start;
-        indices[i++] = start;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 1 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 3 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
 
 
     }
@@ -863,7 +890,9 @@ public class PlayerESPFunction extends Function {
     public void drawItem(ItemStack itemStack, float x, float y, float[] color, float alpha) {
 
         if(vertices.length - v < 60)
-            return;
+            this.uploadBuffers();
+
+        int localVertexOffset = v / 14;
 
         float health = isItemEnchanted(itemStack) ? -0.1f : 0f;
         float maxHealth = 0;
@@ -997,15 +1026,12 @@ public class PlayerESPFunction extends Function {
         vertices[v++] = ety2;
         vertices[v++] = (float) Math.floor(alpha);
 
-
-        int start = v / 14 - 4;
-
-        indices[i++] = start;
-        indices[i++] = 1 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 3 + start;
-        indices[i++] = start;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 1 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 3 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
 
 
     }
@@ -1013,7 +1039,9 @@ public class PlayerESPFunction extends Function {
     public void drawItem16(ItemStack itemStack, float x, float y, float[] color, float alpha) {
 
         if(vertices.length - v < 60)
-            return;
+            this.uploadBuffers();
+
+        int localVertexOffset = v / 14;
 
         float health = isItemEnchanted(itemStack) ? -0.1f : 0f;
         float maxHealth = 0;
@@ -1148,25 +1176,20 @@ public class PlayerESPFunction extends Function {
         vertices[v++] = ety2;
         vertices[v++] = (float) Math.floor(alpha);
 
-
-        int start = v / 14 - 4;
-
-        indices[i++] = start;
-        indices[i++] = 1 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 3 + start;
-        indices[i++] = start;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 1 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 3 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
 
 
     }
 
     public void renderText(String text, float x, float y, float[] color, boolean minecraftColored, float alpha) {
 
-        if (vertices.length - v < 56) {
-            //IDefault.displayClientChatMessage("ESP: Too many objects for render.");
-            return;
-        }
+        if (vertices.length - v < 60)
+            this.uploadBuffers();
 
         y = Window.gameWindowSize.y - y - Text.getMenuFont().glyphRenderOffset;
 
@@ -1262,10 +1285,8 @@ public class PlayerESPFunction extends Function {
 
     public void renderOutline(String text, float x, float y, float[] color, boolean minecraftColored, float alpha) {
 
-        if (vertices.length - v < 56) {
-            //IDefault.displayClientChatMessage("ESP: Too many objects for render.");
-            return;
-        }
+        if (vertices.length - v < 60)
+            this.uploadBuffers();
 
         y = Window.gameWindowSize.y - y - Text.getMenuFont().glyphRenderOffset;
 
@@ -1383,7 +1404,9 @@ public class PlayerESPFunction extends Function {
     public void drawRectangle(float x1, float y1, float x2, float y2, float health, float maxHealth, float alpha) {
 
         if(vertices.length - v < 60)
-            return;
+            this.uploadBuffers();
+
+        int localVertexOffset = v / 14;
 
         float width = x2 - x1;
         float height = y2 - y1;
@@ -1455,15 +1478,98 @@ public class PlayerESPFunction extends Function {
         vertices[v++] = 0;
         vertices[v++] = (float) Math.floor(alpha);
 
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 1 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 3 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
 
-        int start = v / 14 - 4;
+    }
 
-        indices[i++] = start;
-        indices[i++] = 1 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 2 + start;
-        indices[i++] = 3 + start;
-        indices[i++] = start;
+    public void writeCircle(int x, int y, int size) {
+
+        if(vertices.length - v < 60)
+            this.uploadBuffers();
+
+        int localVertexOffset = v / 14;
+
+        vertices[v++] = x;
+        vertices[v++] = Window.gameWindowSize.y - y;
+
+        vertices[v++] = x;
+        vertices[v++] = Window.gameWindowSize.y - y - size;
+        vertices[v++] = size;
+        vertices[v++] = size;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 4;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        // vertex 2
+
+        vertices[v++] = x;
+        vertices[v++] = Window.gameWindowSize.y - y - size;
+
+        vertices[v++] = x;
+        vertices[v++] = Window.gameWindowSize.y - y - size;
+        vertices[v++] = size;
+        vertices[v++] = size;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 4;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        // vertex 3
+
+        vertices[v++] = x + size;
+        vertices[v++] = Window.gameWindowSize.y - y - size;
+
+        vertices[v++] = x;
+        vertices[v++] = Window.gameWindowSize.y - y - size;
+        vertices[v++] = size;
+        vertices[v++] = size;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 4;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        // vertex 4
+
+        vertices[v++] = x + size;
+        vertices[v++] = Window.gameWindowSize.y - y;
+
+        vertices[v++] = x;
+        vertices[v++] = Window.gameWindowSize.y - y - size;
+        vertices[v++] = size;
+        vertices[v++] = size;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 4;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 1 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 2 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = 3 + totalVerticesUploaded + localVertexOffset;
+        indices[i++] = totalVerticesUploaded + localVertexOffset;
 
     }
 
@@ -1495,6 +1601,48 @@ public class PlayerESPFunction extends Function {
             mc.level.playLocalSound(entityEvent.livingEntity.blockPosition(), SoundEvents.SHIELD_BREAK, SoundSource.BLOCKS, 0.8F, 0.8F + mc.level.random.nextFloat() * 0.4F, false);
 
     }
+
+    private void uploadBuffers() {
+
+        if(v == 0)
+            return;
+
+        int[] lastVBO = new int[1];
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, lastVBO);
+
+        int[] lastEBO = new int[1];
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, lastEBO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        ByteBuffer buffer = glMapBufferRange(GL_ARRAY_BUFFER, (long) totalVerticesUploaded * 14 * Float.BYTES, (long) v * Float.BYTES,
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
+        if (buffer != null) {
+            FloatBuffer floatBuffer = buffer.asFloatBuffer();
+            floatBuffer.put(vertices, 0, v);
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        ByteBuffer buffer1 = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, (long) totalIndicesUploaded * Integer.BYTES, (long) i * Integer.BYTES,
+                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+
+        if (buffer1 != null) {
+            IntBuffer intBuffer = buffer1.asIntBuffer();
+            intBuffer.put(indices, 0, i);
+            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, lastVBO[0]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lastEBO[0]);
+
+        totalVerticesUploaded += (v / 14);
+        totalIndicesUploaded += i;
+
+        v = i = 0;
+
+    }
+
     public static ArrayList<LivingEntity> removedEntities = new ArrayList<>();
     @EventTarget(value = Priority.LOWEST)
     void _event(World2DGraphics ignored){
@@ -1535,56 +1683,20 @@ public class PlayerESPFunction extends Function {
         }
 
 
-            for (Player player : players)
-                if ((player.is(mc.player) || !Rage.isBot(player)) && !(player.is(mc.player) && mc.options.getCameraType() == CameraType.FIRST_PERSON))
-                    drawESP(player);
+        for (Player player : players)
+            if ((player.is(mc.player) || !Rage.isBot(player)) && !(player.is(mc.player) && mc.options.getCameraType() == CameraType.FIRST_PERSON))
+                drawESP(player);
 
-            for (LivingEntity livingEntity : removedEntities)
-                if (livingEntity instanceof Player player && (player.is(mc.player) || !Rage.isBot(player)) && !(player.is(mc.player) && mc.options.getCameraType() == CameraType.FIRST_PERSON))
-                    drawESP(player);
+        for (LivingEntity livingEntity : removedEntities)
+            if (livingEntity instanceof Player player && (player.is(mc.player) || !Rage.isBot(player)) && !(player.is(mc.player) && mc.options.getCameraType() == CameraType.FIRST_PERSON))
+                drawESP(player);
 
-        if(v == 0) {
-            if(visualizeAimbot.getCanBeActivated()) {
-                RenderSystem.enableBlend();
-                RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                drawAimbotDot();
-                Render.drawAll();
-            }
+        this.drawAimbotDot();
+
+        this.uploadBuffers();
+
+        if(totalIndicesUploaded == 0)
             return;
-        }
-
-        v = i = 0;
-
-        int[] lastVBO = new int[1];
-        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, lastVBO);
-
-        int[] lastEBO = new int[1];
-        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, lastEBO);
-
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        ByteBuffer buffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, (long) vertices.length * Float.BYTES,
-                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-        if (buffer != null) {
-            FloatBuffer floatBuffer = buffer.asFloatBuffer();
-            floatBuffer.put(vertices);
-            glUnmapBuffer(GL_ARRAY_BUFFER);
-        }
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        ByteBuffer buffer1 = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, (long) indices.length * Integer.BYTES,
-                GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-        if (buffer1 != null) {
-            IntBuffer intBuffer = buffer1.asIntBuffer();
-            intBuffer.put(indices);
-            glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-        }
-
-
-        glBindBuffer(GL_ARRAY_BUFFER, lastVBO[0]);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lastEBO[0]);
 
         RenderSystem.enableBlend();
         RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1673,12 +1785,18 @@ public class PlayerESPFunction extends Function {
                 hbSecondFillColor.getRGBAColor()[2] / 255f, hbSecondFillColor.getRGBAColor()[3] / 255f
         );
 
+        glUniform4f(
+                glGetUniformLocation(shaderProgram, "aimbotDotColor"),
+                visualizeAimbotColor.getRGBAColor()[0] / 255f, visualizeAimbotColor.getRGBAColor()[1] / 255f,
+                visualizeAimbotColor.getRGBAColor()[2] / 255f, visualizeAimbotColor.getRGBAColor()[3] / 255f
+        );
+
         int[] lastVAO = new int[1];
 
         glGetIntegerv(GL_VERTEX_ARRAY_BINDING, lastVAO);
 
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, totalIndicesUploaded, GL_UNSIGNED_INT, 0);
         glBindVertexArray(lastVAO[0]);
 
         glActiveTexture(GL_TEXTURE0);
@@ -1707,13 +1825,8 @@ public class PlayerESPFunction extends Function {
         if(glIsProgram(previousProgram))
             glUseProgram(previousProgram);
 
-        Arrays.fill(vertices, 0);
-        Arrays.fill(indices, 0);
-
-        if(visualizeAimbot.getCanBeActivated()) {
-            drawAimbotDot();
-            Render.drawAll();
-        }
+        totalIndicesUploaded = 0;
+        totalVerticesUploaded = 0;
 
     }
 
@@ -1766,6 +1879,8 @@ public class PlayerESPFunction extends Function {
                     uniform vec4 hbBorderColor;
                     uniform vec4 hbFirstColor;
                     uniform vec4 hbSecondColor;
+                    
+                    uniform vec4 aimbotDotColor;
 
                     uniform sampler2D menuFont;
                     uniform sampler2D itemsAtlas;
@@ -1937,68 +2052,19 @@ public class PlayerESPFunction extends Function {
                             FragColor.a *= rectangleSize.y;
                             FragColor.a *= espAlpha / 255.0;
                         
-                        } else {
+                        } else if (shaderId == 4) {
                         
-                            if(int(playerHealth.x) < 0) {
-                                
-                                vec4 sampled1 = vec4(0.0);
-                                vec4 sampled2 = potionOverlayColor() * texture(potionOverlay, fragTex);
-                                
-                                switch (int(playerHealth.x)) {
-                                    
-                                    case -1:
-                                        sampled1 = texture(potion, fragTex);
-                                        break;
-                                    case -2:
-                                        sampled1 = texture(splashPotion, fragTex);
-                                        break;
-                                    case -3:
-                                        sampled1 = texture(lingeringPotion, fragTex);
-                                        break;
-                                        
-                                }
+                            vec2 center = vec2(rectanglePosition.x + rectangleSize.x / 2, rectanglePosition.y + rectangleSize.x / 2);
+                            vec2 halfSize = rectangleSize / 2.0;
+                            
+                            vec2 distVec = abs(gl_FragCoord.xy - center);
+                            
+                            float distance = length(distVec);
+        
+                            float circleAlpha = 1 - smoothstep(halfSize.x - 5, halfSize.x, distance);
 
-                                if(sampled1.a > 0) {
-                                    FragColor = sampled1;
-                                } else {
-                                    FragColor = sampled2;
-                                }
-                                FragColor.a *= espAlpha / 255.0;
-                                return;
-                                
-                            }
+                            FragColor = vec4(aimbotDotColor.rgb, aimbotDotColor.a * circleAlpha);
 
-                            vec4 sampled = texture(itemsAtlas, fragTex);
-
-                            vec4 itemColor = vec4(rectanglePosition, rectangleSize) * sampled; // =( x2
-                            
-                            FragColor = itemColor;
-                            
-                            if(playerHealth.x < 0) {
-                            
-                                vec4 sampledEnchantment = texture(enchantment, entFragTex);
-                                
-                                float maxChannel = max(max(sampledEnchantment.r, sampledEnchantment.g), sampledEnchantment.b);
-                                                                  
-                                float alpha = maxChannel;
-
-                                if (alpha < 0.1) {
-                                    alpha = 0.0;
-                                }
-                                
-                                sampledEnchantment.a = alpha * 0.5;
-                                
-                                if(FragColor.a == 0) {
-                                    sampledEnchantment.a = 0;
-                                }
-                                
-                                vec3 blended = mix(itemColor.rgb, sampledEnchantment.rgb, sampledEnchantment.a);
-                                FragColor = vec4(blended, itemColor.a);
-                            
-                            }
-                            
-                            FragColor.a *= espAlpha / 255.0;
-                        
                         }
                          
                     }

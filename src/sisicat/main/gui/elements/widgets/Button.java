@@ -66,10 +66,10 @@ public class Button extends Widget {
         this.x = x + Math.round(20 * Window.windowScale);
         this.y = y;
 
-        Render.drawRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
-        Render.drawRectangleBorders(this.x + 1, this.y + 1, width - 2, widgetHeight - 2, 1, new float[]{50, 50, 50}, 255);
+        Render.writeRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
+        Render.writeRectangleBorders(this.x + 1, this.y + 1, width - 2, widgetHeight - 2, 1, new float[]{50, 50, 50}, 255);
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 2, this.y + 2,
                 width - 4, widgetHeight - 4,
                 isWidgetHovered ? isClicked ? WIDGET_ACTIVE_COLOR[1] : WIDGET_HOVERED_COLOR[1] : WIDGET_DEFAULT_COLOR[1],

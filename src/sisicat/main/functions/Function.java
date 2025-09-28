@@ -22,6 +22,27 @@ public class Function implements IDefault {
     @Expose
     private ArrayList<FunctionSetting> functionSettings = new ArrayList<>();
 
+    private int default_bindType;
+    private int default_keyBind;
+    private boolean default_canBeActivated;
+
+    public void setupDefaultSettings() {
+        this.default_bindType = this.bindType;
+        this.default_keyBind = this.keyBind;
+        this.default_canBeActivated = this.canBeActivated;
+    }
+
+    public void resetSettings() {
+
+        this.bindType = this.default_bindType;
+        this.keyBind = this.default_keyBind;
+        this.canBeActivated = this.default_canBeActivated;
+
+        for(FunctionSetting functionSetting : this.getFunctionSettings())
+            functionSetting.resetSettings();
+
+    }
+
     public Function(String name){
         this.name = name;
     }
@@ -89,8 +110,13 @@ public class Function implements IDefault {
     }
 
     public Function addSetting(FunctionSetting... functionSetting){
+
+        for(FunctionSetting functionSetting1 : functionSetting)
+            functionSetting1.setupDefaultSettings();
+
         Collections.addAll(functionSettings, functionSetting);
         return this;
+
     }
 
     public FunctionSetting getSettingByName(String settingName){

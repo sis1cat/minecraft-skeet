@@ -39,7 +39,39 @@ public class FunctionSetting implements IDefault {
 	private int keyBind;
 	@Expose
 	private int bindType;
-	
+
+	private String default_stringValue;
+	private ArrayList<String> default_selectedOptionsList;
+	private boolean default_canBeActivated;
+	private float default_floatValue;
+	private float[] default_color;
+	private int default_keyBind;
+	private int default_bindType;
+
+	public void setupDefaultSettings() {
+
+		this.default_stringValue = this.stringValue;
+		this.default_selectedOptionsList = this.selectedOptionsList;
+		this.default_canBeActivated = this.canBeActivated;
+		this.default_floatValue = this.floatValue;
+		this.default_color = this.color;
+		this.default_keyBind = this.keyBind;
+		this.default_bindType = this.bindType;
+
+	}
+
+	public void resetSettings() {
+
+		this.stringValue = this.default_stringValue;
+		this.selectedOptionsList = this.default_selectedOptionsList;
+		this.canBeActivated = this.default_canBeActivated;
+		this.floatValue = this.default_floatValue;
+		this.color = this.default_color;
+		this.keyBind = this.default_keyBind;
+		this.bindType = this.default_bindType;
+
+	}
+
 	public FunctionSetting(String name, ArrayList<String> optionsList, String stringValue){
 		this.name = name;
 		this.optionsList = optionsList;

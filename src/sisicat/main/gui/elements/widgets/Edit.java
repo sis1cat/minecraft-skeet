@@ -55,10 +55,10 @@ public class Edit extends Widget {
         if (isWidgetHovered)
             Window.isAnyInteractableHovered = true;
 
-        Render.drawRectangleBorders(this.x, y, width, widgetHeight, 1, Color.c12, 255);
-        Render.drawRectangleBorders(this.x + 1, y + 1, width - 2, widgetHeight - 2, 1, Color.c50, 255);
-        Render.drawRectangleBorders(this.x + 2, y + 2, width - 4, widgetHeight - 4, 1, Color.c12, 255);
-        Render.drawRectangle(this.x + 3, y + 3, width - 6, widgetHeight - 6, Color.c25, 255);
+        Render.writeRectangleBorders(this.x, y, width, widgetHeight, 1, Color.c12, 255);
+        Render.writeRectangleBorders(this.x + 1, y + 1, width - 2, widgetHeight - 2, 1, Color.c50, 255);
+        Render.writeRectangleBorders(this.x + 2, y + 2, width - 4, widgetHeight - 4, 1, Color.c12, 255);
+        Render.writeRectangle(this.x + 3, y + 3, width - 6, widgetHeight - 6, Color.c25, 255);
 
         Text.getMenuFont().renderVCenteredText(functionSetting.getStringValue() + "_", this.x + 5, this.y + Math.round((float) widgetHeight / 2), isEditing ? Widget.themeColor : Color.c205);
 

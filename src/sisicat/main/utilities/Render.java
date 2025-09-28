@@ -1,12 +1,7 @@
 package sisicat.main.utilities;
 
-import com.darkmagician6.eventapi.EventManager;
-import com.darkmagician6.eventapi.EventTarget;
-import com.darkmagician6.eventapi.types.Priority;
 import com.mojang.blaze3d.systems.RenderSystem;
 import sisicat.IDefault;
-import sisicat.events.GraphicsEvent;
-import sisicat.events.WindowResizeEvent;
 import sisicat.main.gui.elements.Window;
 
 import java.nio.ByteBuffer;
@@ -34,9 +29,12 @@ public class Render implements IDefault {
             vbo,
             ebo;
 
-    public static float[] vertices = new float[26 * 4 * 2000];
-    public static int[] indices = new int[6 * 2000];
+    public static float[] vertices = new float[26 * 4 * 500];
+    public static int[] indices = new int[6 * 500];
 
+    private static int totalVerticesUploaded = 0;
+    private static int totalIndicesUploaded = 0;
+    
     private static int
             v, i;
 
@@ -91,10 +89,10 @@ public class Render implements IDefault {
         glBindVertexArray(vao);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 26 * 4 * 5000 * Float.BYTES, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * 5000 * Integer.BYTES, GL_DYNAMIC_DRAW);
 
         int stride = 26 * Float.BYTES;
 
@@ -140,7 +138,12 @@ public class Render implements IDefault {
 
     private static final float[] dummyColor = {0, 0, 0, 0};
 
-    public static void drawRectangle(int x, int y, int width, int height, float[] color, float alpha) {
+    public static void writeRectangle(int x, int y, int width, int height, float[] color, float alpha) {
+
+        if(vertices.length - v < 110)
+            uploadBuffers();
+
+        int localVertexOffset = v / 26;
 
         color = convertColor(color);
 
@@ -194,13 +197,16 @@ public class Render implements IDefault {
         setupShader(0);
         setupGlobalAlpha(alpha);
 
-
-        applyIndices();
-
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
     }
 
-    public static void drawRectangleBorders(int x, int y, int width, int height, int size, float[] color, float alpha) {
+    public static void writeRectangleBorders(int x, int y, int width, int height, int size, float[] color, float alpha) {
+
+        if(vertices.length - v < 110)
+            uploadBuffers();
+
+        int localVertexOffset = v / 26;
 
         color = convertColor(color);
 
@@ -256,73 +262,16 @@ public class Render implements IDefault {
         setupShader(1);
         setupGlobalAlpha(alpha);
 
-
-        applyIndices();
-
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
     }
 
-    public static void drawCircle(int x, int y, int size, float[] color, float alpha) {
+    public static void writeGradientRectangle(int x, int y, int width, int height, float[] color1, float[] color2, float[] color3, float[] color4, float alpha) {
 
-        color = convertColor(color);
+        if(vertices.length - v < 110)
+            uploadBuffers();
 
-        int resolutionHeight = Window.gameWindowHeight;
-
-        // vertex 1
-
-        firstVertex(x, y, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, size, size, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(2);
-        setupGlobalAlpha(alpha);
-
-        // vertex 2
-
-        secondVertex(x, y, size, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, size, size, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(2);
-        setupGlobalAlpha(alpha);
-
-        // vertex 3
-
-        thirdVertex(x, y, size, size, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, size, size, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(2);
-        setupGlobalAlpha(alpha);
-
-        // vertex 4
-
-        fourthVertex(x, y, size, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, size, size, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(2);
-        setupGlobalAlpha(alpha);
-
-
-        applyIndices();
-
-
-    }
-
-    public static void drawGradientRectangle(int x, int y, int width, int height, float[] color1, float[] color2, float[] color3, float[] color4, float alpha) {
+        int localVertexOffset = v / 26;
 
         color1 = convertColor(color1);
         color2 = convertColor(color2);
@@ -379,13 +328,16 @@ public class Render implements IDefault {
         setupShader(3);
         setupGlobalAlpha(alpha);
 
-
-        applyIndices();
-
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
     }
 
-    public static void drawMenuTexture(int x, int y, int width, int height, float alpha) {
+    public static void writeMenuTexture(int x, int y, int width, int height, float alpha) {
+
+        if(vertices.length - v < 110)
+            uploadBuffers();
+
+        int localVertexOffset = v / 26;
 
         int resolutionHeight = Window.gameWindowHeight;
 
@@ -437,73 +389,16 @@ public class Render implements IDefault {
         setupShader(4);
         setupGlobalAlpha(alpha);
 
-
-        applyIndices();
-
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
     }
 
-    public static void drawTriangle1(int x, int y, int width, int height, float[] color, float alpha) {
+    public static void writeTriangle1(int x, int y, int width, int height, float[] color, float alpha) {
 
-        int resolutionHeight = Window.gameWindowHeight;
+        if(vertices.length - v < 110)
+            uploadBuffers();
 
-        color = convertColor(color);
-
-        // vertex 1
-
-        firstVertex(x, y, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, width, height, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(5);
-        setupGlobalAlpha(alpha);
-
-        // vertex 2
-
-        secondVertex(x, y, height, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, width, height, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(5);
-        setupGlobalAlpha(alpha);
-
-        // vertex 3
-
-        thirdVertex(x, y, width, height, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, width, height, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(5);
-        setupGlobalAlpha(alpha);
-
-        // vertex 4
-
-        fourthVertex(x, y, width, resolutionHeight);
-        vertices[v++] = 0;
-        vertices[v++] = 0;
-
-        setupRectangleProperties(x, y, width, height, resolutionHeight);
-        setupColors(color, dummyColor, dummyColor, dummyColor);
-
-        setupShader(5);
-        setupGlobalAlpha(alpha);
-
-
-        applyIndices();
-
-
-    }
-
-    public static void drawTriangle2(int x, int y, int width, int height, float[] color, float alpha) {
+        int localVertexOffset = v / 26;
 
         int resolutionHeight = Window.gameWindowHeight;
 
@@ -518,6 +413,69 @@ public class Render implements IDefault {
         setupRectangleProperties(x, y, width, height, resolutionHeight);
         setupColors(color, dummyColor, dummyColor, dummyColor);
 
+        setupShader(5);
+        setupGlobalAlpha(alpha);
+
+        // vertex 2
+
+        secondVertex(x, y, height, resolutionHeight);
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        setupRectangleProperties(x, y, width, height, resolutionHeight);
+        setupColors(color, dummyColor, dummyColor, dummyColor);
+
+        setupShader(5);
+        setupGlobalAlpha(alpha);
+
+        // vertex 3
+
+        thirdVertex(x, y, width, height, resolutionHeight);
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        setupRectangleProperties(x, y, width, height, resolutionHeight);
+        setupColors(color, dummyColor, dummyColor, dummyColor);
+
+        setupShader(5);
+        setupGlobalAlpha(alpha);
+
+        // vertex 4
+
+        fourthVertex(x, y, width, resolutionHeight);
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        setupRectangleProperties(x, y, width, height, resolutionHeight);
+        setupColors(color, dummyColor, dummyColor, dummyColor);
+
+        setupShader(5);
+        setupGlobalAlpha(alpha);
+
+        applyIndices(totalVerticesUploaded + localVertexOffset);
+
+    }
+
+    public static void writeTriangle2(int x, int y, int width, int height, float[] color, float alpha) {
+
+        if(vertices.length - v < 110)
+            uploadBuffers();
+
+        int localVertexOffset = v / 26;
+
+        int resolutionHeight = Window.gameWindowHeight;
+
+        color = convertColor(color);
+
+        // vertex 1
+
+        firstVertex(x, y, resolutionHeight);
+        vertices[v++] = 0;
+        vertices[v++] = 0;
+
+        setupRectangleProperties(x, y, width, height, resolutionHeight);
+        setupColors(color, dummyColor, dummyColor, dummyColor);
+
         setupShader(6);
         setupGlobalAlpha(alpha);
 
@@ -557,13 +515,16 @@ public class Render implements IDefault {
         setupShader(6);
         setupGlobalAlpha(alpha);
 
-
-        applyIndices();
-
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
     }
 
-    public static void drawFrameBuffer(float[] color) {
+    public static void writeFrameBufferTexture(float[] color) {
+
+        if(vertices.length - v < 110)
+            uploadBuffers();
+
+        int localVertexOffset = v / 26;
 
         final float
                 tx = 0,
@@ -623,12 +584,17 @@ public class Render implements IDefault {
         setupGlobalAlpha(255);
 
 
-        applyIndices();
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
 
     }
 
-    public static void drawCharacter(char c, float x, float y, float[] color, float alpha, Font font) {
+    public static void writeCharacter(char c, float x, float y, float[] color, float alpha, Font font) {
+
+        if(vertices.length - v < 110)
+            uploadBuffers();
+
+        int localVertexOffset = v / 26;
 
         int[] charData = font.charactersMap.get((int)c);
         int charX = charData[0];
@@ -709,8 +675,7 @@ public class Render implements IDefault {
         setupShader(7);
         setupGlobalAlpha(alpha);
 
-
-        applyIndices();
+        applyIndices(totalVerticesUploaded + localVertexOffset);
 
 
     }
@@ -780,10 +745,8 @@ public class Render implements IDefault {
 
     }
 
-    private static void applyIndices() {
-
-        int start = v / 26 - 4;
-
+    private static void applyIndices(int start) {
+        
         indices[i++] = start;
         indices[i++] = 1 + start;
         indices[i++] = 2 + start;
@@ -811,10 +774,10 @@ public class Render implements IDefault {
 
     public static void drawAll() {
 
-        if(!uploadBuffers())
-            return;
+        uploadBuffers();
 
-        //defaultBlendFunc();
+        if(totalIndicesUploaded == 0)
+            return;
 
         int previousProgram = glGetInteger(GL_CURRENT_PROGRAM);
 
@@ -861,7 +824,7 @@ public class Render implements IDefault {
         glGetIntegerv(GL_VERTEX_ARRAY_BINDING, lastVAO);
 
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, totalIndicesUploaded, GL_UNSIGNED_INT, 0);
         glBindVertexArray(lastVAO[0]);
 
         glActiveTexture(GL_TEXTURE0);
@@ -883,16 +846,15 @@ public class Render implements IDefault {
 
         glUseProgram(previousProgram);
 
-        cleanUpBuffers();
+        totalIndicesUploaded = 0;
+        totalVerticesUploaded = 0;
 
     }
 
-    private static boolean uploadBuffers() {
+    private static void uploadBuffers() {
 
         if(v == 0)
-            return false;
-
-        v = i = 0;
+            return;
 
         int[] lastVBO = new int[1];
         glGetIntegerv(GL_ARRAY_BUFFER_BINDING, lastVBO);
@@ -901,37 +863,33 @@ public class Render implements IDefault {
         glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, lastEBO);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        ByteBuffer buffer = glMapBufferRange(GL_ARRAY_BUFFER, 0, (long) vertices.length * Float.BYTES,
-                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        ByteBuffer buffer = glMapBufferRange(GL_ARRAY_BUFFER, (long) totalVerticesUploaded * 26 * Float.BYTES, (long) v * Float.BYTES,
+                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 
         if (buffer != null) {
             FloatBuffer floatBuffer = buffer.asFloatBuffer();
-            floatBuffer.put(vertices);
+            floatBuffer.put(vertices, 0, v);
             glUnmapBuffer(GL_ARRAY_BUFFER);
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        ByteBuffer buffer1 = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, (long) indices.length * Integer.BYTES,
-                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        ByteBuffer buffer1 = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, (long) totalIndicesUploaded * Integer.BYTES, (long) i * Integer.BYTES,
+                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 
         if (buffer1 != null) {
             IntBuffer intBuffer = buffer1.asIntBuffer();
-            intBuffer.put(indices);
+            intBuffer.put(indices, 0, i);
             glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, lastVBO[0]);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lastEBO[0]);
 
-        return true;
+        totalVerticesUploaded += (v / 26);
+        totalIndicesUploaded += i;
 
-    }
-
-    private static void defaultBlendFunc() {
-
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+        v = i = 0;
+        
     }
 
     private static void beginShaderProgram(int resolutionWidth, int resolutionHeight) {
@@ -939,13 +897,6 @@ public class Render implements IDefault {
         glUseProgram(programID);
 
         glUniform2f(glGetUniformLocation(programID, "renderResolution"), resolutionWidth, resolutionHeight);
-
-    }
-
-    private static void cleanUpBuffers() {
-
-        Arrays.fill(vertices, 0);
-        Arrays.fill(indices, 0);
 
     }
 
@@ -1061,19 +1012,6 @@ public class Render implements IDefault {
                         
                     }
                 
-                } else if (shaderId == 2) {
-
-                    vec2 center = vec2(rectanglePosition.x + rectangleSize.x / 2, rectanglePosition.y + rectangleSize.y / 2);
-                    vec2 halfSize = rectangleSize / 2.0;
-                    
-                    vec2 distVec = abs(gl_FragCoord.xy - center);
-                    
-                    float distance = length(distVec);
-
-                    float circleAlpha = 1 - smoothstep(halfSize.x - 5, halfSize.x, distance);
-                    
-                    FragColor = vec4(firstColor.rgb, circleAlpha * alpha);
-                     
                 } else if (shaderId == 3) {
                     
                     float normalizedX = (gl_FragCoord.x - rectanglePosition.x) / rectangleSize.x;

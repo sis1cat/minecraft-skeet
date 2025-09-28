@@ -1,5 +1,7 @@
 package net.minecraft.world.entity.player;
 
+import com.darkmagician6.eventapi.EventManager;
+import com.darkmagician6.eventapi.events.Event;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -118,6 +120,7 @@ import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
 import org.slf4j.Logger;
 import sisicat.IDefault;
+import sisicat.main.functions.visual.PlayerESPFunction;
 
 public abstract class Player extends LivingEntity {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -1244,8 +1247,15 @@ public abstract class Player extends LivingEntity {
                         }
 
                         if (flag1) {
-                            this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, this.getSoundSource(), 2.0F, 1.0F); //crit
+
+                            PlayerESPFunction.CriticalSoundEvent criticalSoundEvent = new PlayerESPFunction.CriticalSoundEvent();
+                            EventManager.call(criticalSoundEvent);
+
+                            if(!criticalSoundEvent.isCancelled())
+                                this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, this.getSoundSource(), 2.0F, 1.0F); //crit
+
                             this.crit(pTarget);
+
                         } else {
                             IDefault.displayClientChatMessage(
                                     flag3 + " " +

@@ -161,10 +161,6 @@ public class Window extends Widget implements IDefault {
                         0,
                         new String[] {"W-Tap", "Shift"}
                 ),
-                new Combo(
-                        FunctionsManager.getFunctionByName("Rage").getSettingByName("Force critical attack"),
-                        "Force critical attack", 0
-                ),
                 new Check(
                         FunctionsManager.getFunctionByName("Rage").getSettingByName("Attack through blocks"),
                         false, 0
@@ -275,10 +271,13 @@ public class Window extends Widget implements IDefault {
                 ).addColor(new sisicat.main.gui.elements.widgets.Color(
                         FunctionsManager.getFunctionByName("Player ESP").getSettingByName("Item icon color"), 3)),
                 new Check(
-                        FunctionsManager.getFunctionByName("Player ESP").getSettingByName("Armor icons"),
+                        FunctionsManager.getFunctionByName("Player ESP").getSettingByName("Hit marker sound"),
                         false, 3
-                ).addColor(new sisicat.main.gui.elements.widgets.Color(
-                        FunctionsManager.getFunctionByName("Player ESP").getSettingByName("Armor icons color"), 3))
+                ),
+                new Combo(
+                        FunctionsManager.getFunctionByName("Player ESP").getSettingByName("Hit marker sound"),
+                        "", FunctionsManager.getFunctionByName("Player ESP").getSettingByName("Hit marker sound"), 3
+                )
         );
 
         VISUALS_EFFECTS.addElement(
@@ -445,6 +444,10 @@ public class Window extends Widget implements IDefault {
                 new Button(
                         FunctionsManager.getFunctionByName("Configuration").getSettingByName("Delete"),
                         "Delete", 6
+                ),
+                new Button(
+                        FunctionsManager.getFunctionByName("Configuration").getSettingByName("Reset"),
+                        "Reset", 6
                 )
         );
 
@@ -470,6 +473,14 @@ public class Window extends Widget implements IDefault {
                                 bindText.color != null
                 ) bindText.color.drawPicker();
 
+                if (
+                        widget instanceof Selectable selectable
+                ) selectable.drawOptions();
+
+                if (
+                        widget instanceof Combo combo
+                ) combo.drawOptions();
+
             }
 
     }
@@ -486,14 +497,14 @@ public class Window extends Widget implements IDefault {
 
         updateSizes();
 
-        Render.drawRectangleBorders(windowX, windowY, windowWidth, windowHeight, 1, Color.c12, 255 );
-        Render.drawRectangleBorders(windowX + 1, windowY + 1, (windowWidth - 2), (windowHeight - 2), 1, Color.c60, 255);
-        Render.drawRectangleBorders(windowX + 2, windowY + 2, (windowWidth - 4), (windowHeight - 4), 3, Color.c40, 255);
-        Render.drawRectangleBorders(windowX + 5, windowY + 5, (windowWidth - 10), (windowHeight - 10), 1, Color.c60, 255);
-        Render.drawMenuTexture(windowX + 6, windowY + 10, (windowWidth - 12), (windowHeight - 16), 255);
-        Render.drawMenuTexture(windowX + 6, windowY + 10, (windowWidth - 12), (windowHeight - 16), 255);
+        Render.writeRectangleBorders(windowX, windowY, windowWidth, windowHeight, 1, Color.c12, 255 );
+        Render.writeRectangleBorders(windowX + 1, windowY + 1, (windowWidth - 2), (windowHeight - 2), 1, Color.c60, 255);
+        Render.writeRectangleBorders(windowX + 2, windowY + 2, (windowWidth - 4), (windowHeight - 4), 3, Color.c40, 255);
+        Render.writeRectangleBorders(windowX + 5, windowY + 5, (windowWidth - 10), (windowHeight - 10), 1, Color.c60, 255);
+        Render.writeMenuTexture(windowX + 6, windowY + 10, (windowWidth - 12), (windowHeight - 16), 255);
+        Render.writeMenuTexture(windowX + 6, windowY + 10, (windowWidth - 12), (windowHeight - 16), 255);
 
-        Render.drawRectangle(windowX + 6, windowY + 6, (windowWidth - 12), 4, Color.c12, 255);
+        Render.writeRectangle(windowX + 6, windowY + 6, (windowWidth - 12), 4, Color.c12, 255);
 
         float[] blueColor = {55,175,220};
         float[] purpleColor = {205, 70, 205};
@@ -504,12 +515,12 @@ public class Window extends Widget implements IDefault {
         float[] darkGreenColor = {110,120,30};
 
         // 1st line
-        Render.drawGradientRectangle(windowX + 7, windowY + 7, ((windowWidth - 14) / 2), 1, blueColor, purpleColor, blueColor, purpleColor, 255);
-        Render.drawGradientRectangle(windowX + 7 + (windowWidth - 14) / 2, windowY + 7, (int) Math.ceil(((double) (windowWidth - 14) / 2)), 1, purpleColor, greenColor, purpleColor, greenColor, 255);
+        Render.writeGradientRectangle(windowX + 7, windowY + 7, ((windowWidth - 14) / 2), 1, blueColor, purpleColor, blueColor, purpleColor, 255);
+        Render.writeGradientRectangle(windowX + 7 + (windowWidth - 14) / 2, windowY + 7, (int) Math.ceil(((double) (windowWidth - 14) / 2)), 1, purpleColor, greenColor, purpleColor, greenColor, 255);
 
         // 2nd line
-        Render.drawGradientRectangle(windowX + 7, windowY + 8, ((windowWidth - 14) / 2), 1, darkBlueColor, darkPurpleColor, darkBlueColor, darkPurpleColor, 255);
-        Render.drawGradientRectangle(windowX + 7 + (windowWidth - 14) / 2, windowY + 8, (int) Math.ceil((double) (windowWidth - 14) / 2), 1, darkPurpleColor, darkGreenColor, darkPurpleColor, darkGreenColor, 255);
+        Render.writeGradientRectangle(windowX + 7, windowY + 8, ((windowWidth - 14) / 2), 1, darkBlueColor, darkPurpleColor, darkBlueColor, darkPurpleColor, 255);
+        Render.writeGradientRectangle(windowX + 7 + (windowWidth - 14) / 2, windowY + 8, (int) Math.ceil((double) (windowWidth - 14) / 2), 1, darkPurpleColor, darkGreenColor, darkPurpleColor, darkGreenColor, 255);
 
         TABS.draw(windowX + 6, windowY + 10);
 

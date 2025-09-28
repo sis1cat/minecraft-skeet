@@ -69,7 +69,7 @@ public class Color extends Widget{
         width3 = Math.round(DEFAULT_WIDGET_WIDTH_3 * Window.windowScale);
         height3 = Math.round(36 * Window.windowScale) + 4;
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x, this.y,
                 width2, height2,
                 1,
@@ -82,7 +82,7 @@ public class Color extends Widget{
 
         float[] darkestColor = hsvToRgb(functionSetting.getHSVAColor()[0], functionSetting.getHSVAColor()[1],  darkestValue);
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 1, this.y + 1, width2 - 2, height2 - 2,
                 darkestColor, darkestColor,
                 color, color, 255
@@ -123,19 +123,19 @@ public class Color extends Widget{
 
         calculatePicker();
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x - 1, this.y + height2 + 1,
                 width, height,1,
                 sisicat.main.utilities.Color.c12, 255
         );
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x, this.y + height2 + 2,
                 width - 2, height - 2, 1,
                 sisicat.main.utilities.Color.c60, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 this.x + 1, this.y + height2 + 3,
                 width - 4, height - 4,
                 sisicat.main.utilities.Color.c40, 255
@@ -143,13 +143,13 @@ public class Color extends Widget{
 
         // dot picker
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x + 3, this.y + height2 + 5,
                 (int) Math.round(152 * Window.windowScale), (int) Math.round(152 * Window.windowScale), 1,
                 sisicat.main.utilities.Color.c12, 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 4, this.y + height2 + 6,
                 (int) Math.round(152 * Window.windowScale) - 2, (int) Math.round(152 * Window.windowScale) - 2,
                 new float[]{0, 0, 0}, new float[]{0, 0, 0}, new float[]{255, 255, 255}, hsvToRgb(360 - HOffset * 360, 1f, 1f),
@@ -158,7 +158,7 @@ public class Color extends Widget{
 
         // color slider
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x + 4 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 5,
                 width - (int) Math.round(152 * Window.windowScale) - 11, (int) Math.round(152 * Window.windowScale), 1,
                 sisicat.main.utilities.Color.c12, 255
@@ -166,42 +166,42 @@ public class Color extends Widget{
 
         int gradientOffset = ((Math.round(152 * Window.windowScale) - 2) / 6);
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 5 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 6,
                 width - (int) Math.round(152 * Window.windowScale) - 13, gradientOffset,
                 purple, purple, red, red,
                 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 5 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 6 + gradientOffset,
                 width - (int) Math.round(152 * Window.windowScale) - 13, gradientOffset,
                 blue, blue, purple, purple,
                 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 5 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 6 + gradientOffset * 2,
                 width - (int) Math.round(152 * Window.windowScale) - 13, gradientOffset,
                 cyan, cyan, blue, blue,
                 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 5 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 6 + gradientOffset * 3,
                 width - (int) Math.round(152 * Window.windowScale) - 13, gradientOffset,
                 green, green, cyan, cyan,
                 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 5 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 6 + gradientOffset * 4,
                 width - (int) Math.round(152 * Window.windowScale) - 13, gradientOffset,
                 yellow, yellow, green, green,
                 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 5 + (int) Math.round(152 * Window.windowScale) + 2, this.y + height2 + 6 + gradientOffset * 5,
                 width - (int) Math.round(152 * Window.windowScale) - 13, gradientOffset + ((int) Math.round(152 * Window.windowScale) - 2 - gradientOffset * 6),
                 red, red, yellow, yellow,
@@ -210,49 +210,49 @@ public class Color extends Widget{
 
         // alpha slider
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x + 3, this.y + height2 + 5 + (int) Math.round(152 * Window.windowScale) + 3,
                 (int) Math.round(152 * Window.windowScale), height - (int) Math.round(152 * Window.windowScale) - 11, 1,
                 sisicat.main.utilities.Color.c12, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 this.x + 4, this.y + height2 + 6 + (int) Math.round(152 * Window.windowScale) + 3,
                 (int) Math.round(152 * Window.windowScale) - 2, height - (int) Math.round(152 * Window.windowScale) - 13,
                 hsvToRgb((1 - HOffset) * 360, SVOffsets[0], 1 - SVOffsets[1]),
                 functionSetting.getHSVAColor()[3] * 255
         );
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x + 4 + (int)(SVOffsets[0] * Math.round(152 * Window.windowScale)) - 2, this.y + height2 + 6 + (int)(SVOffsets[1] * Math.round(152 * Window.windowScale)) - 2,
                 4, 4, 1, sisicat.main.utilities.Color.c12, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 this.x + 4 + (int)(SVOffsets[0] * Math.round(152 * Window.windowScale)) + 1 - 2, this.y + height2 + 6 + (int)(SVOffsets[1] * Math.round(152 * Window.windowScale)) + 1 - 2,
                 2, 2, new float[]{255, 255, 255}, 75f
         );
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x + 4 + (int) Math.round(152 * Window.windowScale) + 3, this.y + height2 + 5 + (int)(HOffset * Math.round(152 * Window.windowScale)) - 2,
                 width - (int) Math.round(152 * Window.windowScale) - 13, 4, 1,
                 sisicat.main.utilities.Color.c12, 255
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 this.x + 4 + (int) Math.round(152 * Window.windowScale) + 4, this.y + height2 + 5 + (int)(HOffset * Math.round(152 * Window.windowScale)) - 1,
                 width - (int) Math.round(152 * Window.windowScale) - 15, 2,
                 new float[]{255, 255, 255}, 75f
         );
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 this.x + 3 + (int)(functionSetting.getHSVAColor()[3] * Math.round(152 * Window.windowScale)) - 2, this.y + height2 + 6 + (int) Math.round(152 * Window.windowScale) + 3,
                 4,height - (int) Math.round(152 * Window.windowScale) - 13, 1,
                 sisicat.main.utilities.Color.c12, 255
 
         );
 
-        Render.drawRectangle(
+        Render.writeRectangle(
                 this.x + 3 + (int)(functionSetting.getHSVAColor()[3] * Math.round(152 * Window.windowScale)) - 1, this.y + height2 + 6 + (int) Math.round(152 * Window.windowScale) + 4,
                 2,height - (int) Math.round(152 * Window.windowScale) - 15,
                 new float[]{255, 255, 255}, 75f
@@ -275,8 +275,8 @@ public class Color extends Widget{
         int elementsCount = 2;
         int height = elementsCount * Math.round(18 * Window.windowScale) + 2 * (elementsCount - 1) + 2;
 
-        Render.drawRectangleBorders(this.x - width3 - 1, this.y - 1, width3, height3, 1, sisicat.main.utilities.Color.c12, 255);
-        Render.drawRectangle(this.x - width3, this.y, width3 - 2, height3 - 2, sisicat.main.utilities.Color.c35, 255);
+        Render.writeRectangleBorders(this.x - width3 - 1, this.y - 1, width3, height3, 1, sisicat.main.utilities.Color.c12, 255);
+        Render.writeRectangle(this.x - width3, this.y, width3 - 2, height3 - 2, sisicat.main.utilities.Color.c35, 255);
 
         if(hoveredOption != -1) {
 
@@ -285,7 +285,7 @@ public class Color extends Widget{
             int buttonHeight = Math.round(18 * Window.windowScale);
             int buttonY = startY + i * (buttonHeight + 2);
 
-            Render.drawRectangle(
+            Render.writeRectangle(
                     this.x - width3,
                     buttonY,
                     width3 - 2, buttonHeight, new float[]{25, 25, 25}, 255

@@ -392,6 +392,7 @@ public class MultiPlayerGameMode {
     public void attack(Player pPlayer, Entity pTargetEntity) {
         this.ensureHasSentCarriedItem();
         this.connection.send(ServerboundInteractPacket.createAttackPacket(pTargetEntity, pPlayer.isShiftKeyDown()));
+
         if (this.localPlayerMode != GameType.SPECTATOR) {
             pPlayer.attack(pTargetEntity);
             pPlayer.resetAttackStrengthTicker();

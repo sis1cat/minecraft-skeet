@@ -112,8 +112,6 @@ public class ItemsRenderer {
 
             pPoseStack.pushPose();
 
-            pPoseStack.scale(0.385f, 0.385f, 0.385f);
-
             if(blockItem != null && itemStackRenderState.isGui3d()) {
 
                 VoxelShape shape = blockItem.getBlock().defaultBlockState().getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO);
@@ -202,7 +200,7 @@ public class ItemsRenderer {
                 }
 
             } else {
-                pPoseStack.scale(1.25f, 1.25f, 1.25f);
+
                 rotation.x += 90;
 
                 pPoseStack.rotateDegXn((float) rotation.x);
@@ -253,8 +251,6 @@ public class ItemsRenderer {
             ItemStackRenderState.LayerRenderState layerRenderState = itemStackRenderState.layers[i];
 
             pPoseStack.pushPose();
-
-            pPoseStack.scale(0.25f, 0.25f, 0.25f);
 
             Vec3 center = new Vec3(
                     0.5,

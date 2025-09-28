@@ -60,21 +60,21 @@ public class Group extends Widget {
 
         float alpha = 255;
 
-        Render.drawRectangle(x + 2, y + 2, groupWidth - 3, groupHeight - 4, new float[]{23, 23, 23}, alpha);
+        Render.writeRectangle(x + 2, y + 2, groupWidth - 3, groupHeight - 4, new float[]{23, 23, 23}, alpha);
 
-        Render.drawRectangle(x + 1, y + 2, 1, groupHeight - 4, outlineColor, alpha);
-        Render.drawRectangle(x + 1, y + groupHeight - 2, groupWidth - 1, 1, outlineColor,alpha);
-        Render.drawRectangle(x + groupWidth - 1, y + 2, 1, groupHeight - 4, outlineColor, alpha);
+        Render.writeRectangle(x + 1, y + 2, 1, groupHeight - 4, outlineColor, alpha);
+        Render.writeRectangle(x + 1, y + groupHeight - 2, groupWidth - 1, 1, outlineColor,alpha);
+        Render.writeRectangle(x + groupWidth - 1, y + 2, 1, groupHeight - 4, outlineColor, alpha);
 
-        Render.drawRectangle(x, y + 1, 1, groupHeight - 2, Color.c12, alpha);
-        Render.drawRectangle(x, y + groupHeight - 1, groupWidth, 1, Color.c12, alpha);
-        Render.drawRectangle(x + groupWidth, y + 1, 1, groupHeight - 1, Color.c12, alpha);
+        Render.writeRectangle(x, y + 1, 1, groupHeight - 2, Color.c12, alpha);
+        Render.writeRectangle(x, y + groupHeight - 1, groupWidth, 1, Color.c12, alpha);
+        Render.writeRectangle(x + groupWidth, y + 1, 1, groupHeight - 1, Color.c12, alpha);
 
-        Render.drawRectangle(x + 1, y + 1, 8, 1, outlineColor, alpha);
-        Render.drawRectangle(x, y, 9, 1, Color.c12, alpha);
+        Render.writeRectangle(x + 1, y + 1, 8, 1, outlineColor, alpha);
+        Render.writeRectangle(x, y, 9, 1, Color.c12, alpha);
 
-        Render.drawRectangle(x + 12 + Text.getMenuBoldFont().getStringWidth(groupName) + 3, y + 1, groupWidth - (12 + Text.getMenuBoldFont().getStringWidth(groupName) + 3), 1, outlineColor, alpha);
-        Render.drawRectangle(x + 12 + Text.getMenuBoldFont().getStringWidth(groupName) + 3, y, groupWidth - (12 + Text.getMenuBoldFont().getStringWidth(groupName) + 2), 1, Color.c12, alpha);
+        Render.writeRectangle(x + 12 + Text.getMenuBoldFont().getStringWidth(groupName) + 3, y + 1, groupWidth - (12 + Text.getMenuBoldFont().getStringWidth(groupName) + 3), 1, outlineColor, alpha);
+        Render.writeRectangle(x + 12 + Text.getMenuBoldFont().getStringWidth(groupName) + 3, y, groupWidth - (12 + Text.getMenuBoldFont().getStringWidth(groupName) + 2), 1, Color.c12, alpha);
 
         drawElements(x, y, gameWindowSize);
 
@@ -265,15 +265,15 @@ public class Group extends Widget {
         RenderSystem.disableScissor();
 
         // small triangle for show able to resize group
-        Render.drawTriangle1(x + groupWidth - 6, y + groupHeight - 7, 5, 5, isResizing ? themeColor : Color.c40, 255);
+        Render.writeTriangle1(x + groupWidth - 6, y + groupHeight - 7, 5, 5, isResizing ? themeColor : Color.c40, 255);
 
         needToScroll = occupiedSpace > (groupHeight - 4);
 
         if(needToScroll) {
 
             // faded rectangles for able to scroll
-            Render.drawGradientRectangle(x + 2, y + 2, groupWidth - 3, Math.round(20 * Window.windowScale), new float[]{23, 23, 23, 0}, new float[]{23, 23, 23, 0}, new float[]{23, 23, 23, 255}, new float[]{23, 23, 23, 255}, 255);
-            Render.drawGradientRectangle(x + 2, y + groupHeight - Math.round(20 * Window.windowScale) - 2, groupWidth - 3, Math.round(20 * Window.windowScale), new float[]{23, 23, 23, 255}, new float[]{23, 23, 23, 255}, new float[]{23, 23, 23, 0}, new float[]{23, 23, 23, 0}, 255);
+            Render.writeGradientRectangle(x + 2, y + 2, groupWidth - 3, Math.round(20 * Window.windowScale), new float[]{23, 23, 23, 0}, new float[]{23, 23, 23, 0}, new float[]{23, 23, 23, 255}, new float[]{23, 23, 23, 255}, 255);
+            Render.writeGradientRectangle(x + 2, y + groupHeight - Math.round(20 * Window.windowScale) - 2, groupWidth - 3, Math.round(20 * Window.windowScale), new float[]{23, 23, 23, 255}, new float[]{23, 23, 23, 255}, new float[]{23, 23, 23, 0}, new float[]{23, 23, 23, 0}, 255);
 
         }
 
@@ -361,15 +361,6 @@ public class Group extends Widget {
 
             }
 
-            if (
-                widget instanceof Selectable selectable
-            ) selectable.drawOptions();
-
-            if (
-                    widget instanceof Combo combo
-            ) combo.drawOptions();
-
-
         }
 
         if(!needToScroll)
@@ -394,8 +385,8 @@ public class Group extends Widget {
             scrollBarYOffset = 0;
 
         // scroll bar
-        Render.drawRectangle(x + groupWidth - Math.round(7 * Window.windowScale), y + 1, Math.round(7 * Window.windowScale), groupHeight - 3, new float[]{40, 40, 40}, 255);
-        Render.drawRectangle(x + groupWidth - Math.round(7 * Window.windowScale) + 1, y + 2 + scrollBarYOffset, (int)Math.ceil(7 * Window.windowScale) - 2, scrollBarHeight, new float[]{65, 65, 65}, 255);
+        Render.writeRectangle(x + groupWidth - Math.round(7 * Window.windowScale), y + 1, Math.round(7 * Window.windowScale), groupHeight - 3, new float[]{40, 40, 40}, 255);
+        Render.writeRectangle(x + groupWidth - Math.round(7 * Window.windowScale) + 1, y + 2 + scrollBarYOffset, (int)Math.ceil(7 * Window.windowScale) - 2, scrollBarHeight, new float[]{65, 65, 65}, 255);
 
         //if(isScrollBarHovered) Window.isAnyInteractableHovered = true;
 

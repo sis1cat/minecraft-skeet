@@ -3,8 +3,6 @@ package sisicat.main.utilities;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -1129,7 +1127,7 @@ public class Font implements IDefault, AutoCloseable {
 
             int charWidth = charData[2];
 
-            Render.drawCharacter(c, currentX, y, color, 255, this);
+            Render.writeCharacter(c, currentX, y, color, 255, this);
 
             currentX += charWidth;
 

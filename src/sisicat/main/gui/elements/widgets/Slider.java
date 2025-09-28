@@ -126,11 +126,11 @@ public class Slider extends Widget {
         this.x = x + Math.round(20 * Window.windowScale);
         this.y = y + (text.isEmpty() ? 0 : Math.round(Text.getMenuFont().getBaseAscender() + 6 * Window.windowScale));
 
-        Render.drawRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
+        Render.writeRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
 
         boolean triggerColor = isWidgetHovered || isDragging;
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 1, this.y + 1,
                 width - 2, widgetHeight - 2,
                 triggerColor ? WIDGET_HOVERED_COLOR[1] : WIDGET_DEFAULT_COLOR[0],
@@ -146,7 +146,7 @@ public class Slider extends Widget {
 
         valueWidth = Math.min(valueWidth, width - 2);
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 1, this.y + 1,
                 valueWidth, widgetHeight - 2,
                 WIDGET_ACTIVE_COLOR[0],

@@ -76,8 +76,8 @@ public class Bind extends Widget {
         int elementsCount = 4;
         int height = elementsCount * Math.round(18 * Window.windowScale) + 2 * (elementsCount - 1) + 2;
 
-        Render.drawRectangleBorders(this.x - Math.round(110 * Window.windowScale), this.y - 2, Math.round(100 * Window.windowScale), height, 1, Color.c12, 255);
-        Render.drawRectangle(this.x - Math.round(110 * Window.windowScale) + 1, this.y - 1, Math.round(100 * Window.windowScale) - 2, height - 2, new float[]{35, 35, 35}, 255);
+        Render.writeRectangleBorders(this.x - Math.round(110 * Window.windowScale), this.y - 2, Math.round(100 * Window.windowScale), height, 1, Color.c12, 255);
+        Render.writeRectangle(this.x - Math.round(110 * Window.windowScale) + 1, this.y - 1, Math.round(100 * Window.windowScale) - 2, height - 2, new float[]{35, 35, 35}, 255);
 
         if(hoveredOption != -1) {
 
@@ -86,7 +86,7 @@ public class Bind extends Widget {
             int buttonHeight = Math.round(18 * Window.windowScale);
             int buttonY = startY + i * (buttonHeight + 2);
 
-            Render.drawRectangle(
+            Render.writeRectangle(
                     this.x - Math.round(110 * Window.windowScale) + 1,
                     buttonY,
                     Math.round(100 * Window.windowScale) - 2, buttonHeight, new float[]{25, 25, 25}, 255);

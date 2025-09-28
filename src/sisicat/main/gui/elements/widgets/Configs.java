@@ -1,12 +1,9 @@
 package sisicat.main.gui.elements.widgets;
 
 import com.darkmagician6.eventapi.EventTarget;
-import net.minecraft.world.phys.Vec2;
 import sisicat.MineSense;
 import sisicat.events.MouseEvent;
 import sisicat.events.MouseMoveEvent;
-import sisicat.main.Config;
-import sisicat.main.functions.FunctionSetting;
 import sisicat.main.functions.FunctionsManager;
 import sisicat.main.gui.elements.Window;
 import sisicat.main.utilities.Color;
@@ -76,8 +73,8 @@ public class Configs extends Widget {
         this.x = x + Math.round(20 * Window.windowScale);
         this.y = y;
 
-        Render.drawRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
-        Render.drawRectangle(this.x + 1, this.y + 1, width - 2, widgetHeight - 2, Color.c35, 255);
+        Render.writeRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, 255);
+        Render.writeRectangle(this.x + 1, this.y + 1, width - 2, widgetHeight - 2, Color.c35, 255);
 
         int widgetHeight = Math.round(16 * Window.windowScale);
 
@@ -129,7 +126,7 @@ public class Configs extends Widget {
             this.width = width;
             this.height = height;
 
-            Render.drawRectangle(x, y, width, height, Color.c25, selected.equals(this.name) ? 255 : 0);
+            Render.writeRectangle(x, y, width, height, Color.c25, selected.equals(this.name) ? 255 : 0);
             Text.getMenuFont(selected.equals(this.name)).renderVCenteredText(name, x + 10, y + (float) Math.floor((float) height / 2), isUsed ? Widget.themeColor : Color.c205);
 
         }

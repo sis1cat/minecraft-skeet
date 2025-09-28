@@ -251,13 +251,15 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import org.slf4j.Logger;
+import sisicat.IDefault;
 import sisicat.MineSense;
 import sisicat.events.UseItemEvent;
+import sisicat.main.functions.combat.Rage;
 
 @OnlyIn(Dist.CLIENT)
 public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements WindowEventHandler {
     static Minecraft instance;
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
     public static final boolean ON_OSX = Util.getPlatform() == Util.OS.OSX;
     private static final int MAX_TICKS_PER_UPDATE = 10;
     public static final ResourceLocation DEFAULT_FONT = ResourceLocation.withDefaultNamespace("default");
@@ -1163,6 +1165,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
     }
 
     private void runTick(boolean pRenderLevel) {
+
         this.window.setErrorSection("Pre render");
         if (this.window.shouldClose()) {
             this.stop();
@@ -1191,7 +1194,6 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
                 profilerfiller.incrementCounter("clientTick");
                 this.tick();
             }
-
             profilerfiller.pop();
         }
 
@@ -1221,6 +1223,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
         profilerfiller.popPush("mouse");
         this.mouseHandler.handleAccumulatedMovement();
         profilerfiller.pop();
+
         if (!this.noRender) {
             profilerfiller.popPush("gameRenderer");
             this.gameRenderer.render(this.deltaTracker, pRenderLevel);
@@ -1300,6 +1303,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
         }
 
         profilerfiller.pop();
+
     }
 
     private ProfilerFiller constructProfiler(boolean pRenderFpsPie, @Nullable SingleTickProfiler pSingleTickProfiler) {
@@ -1341,6 +1345,9 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
         } else {
             profilerpiechart.setPieChartResults(null);
         }
+
+
+
     }
 
     @Override
@@ -1792,6 +1799,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
             if (clientpacketlistener != null && !this.pause) {
                 clientpacketlistener.send(ServerboundClientTickEndPacket.INSTANCE);
             }
+
         } else if (this.pendingConnection != null) {
             profilerfiller.popPush("pendingConnection");
             this.pendingConnection.tick();
@@ -1800,6 +1808,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
         profilerfiller.popPush("keyboard");
         this.keyboardHandler.tick();
         profilerfiller.pop();
+
     }
 
     private boolean isLevelRunningNormally() {
@@ -1904,6 +1913,7 @@ public class Minecraft extends ReentrantBlockableEventLoop<Runnable> implements 
             while (this.options.keyPickItem.consumeClick()) {
             }
         } else {
+
             while (this.options.keyAttack.consumeClick()) {
                 flag2 |= this.startAttack();
             }

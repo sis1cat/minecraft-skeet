@@ -63,6 +63,9 @@ public class FunctionsManager implements IDefault {
 
         );
 
+        for (Function function : functionsArray)
+            function.setupDefaultSettings();
+
     }
 
     public static ArrayList<Function> getFunctionsArray(){

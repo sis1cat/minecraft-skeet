@@ -104,14 +104,14 @@ public class Check extends Widget.AdditionAbleWidget {
         else
             state = functionSetting.getCanBeActivated();
 
-        Render.drawRectangleBorders(
+        Render.writeRectangleBorders(
                 x, y,
                 widgetWidth, widgetHeight,
                 1, Color.c12,
                 255
         );
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 x + 1, y + 1,
                 widgetWidth - 2, widgetHeight - 2,
                 state ? WIDGET_ENABLED_COLOR[1] : isWidgetHovered ? WIDGET_HOVERED_COLOR[1] : WIDGET_DISABLED_COLOR[1],

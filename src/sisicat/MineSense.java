@@ -43,6 +43,8 @@ public class MineSense implements IDefault {
 
         mainRender = new MainRender();
 
+        SoundPlayer.initialize();
+
         ViaMCP.create();
 
     }

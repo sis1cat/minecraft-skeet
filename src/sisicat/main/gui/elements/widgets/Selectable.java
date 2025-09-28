@@ -85,11 +85,11 @@ public class Selectable extends Widget{
 
         float alpha = 255;
 
-        Render.drawRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, alpha);
+        Render.writeRectangleBorders(this.x, this.y, width, widgetHeight, 1, Color.c12, alpha);
 
         boolean triggerColor = isWidgetHovered || isOpened;
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + 1, this.y + 1,
                 width - 2, widgetHeight - 2,
                 triggerColor ? WIDGET_HOVERED_COLOR[1] : WIDGET_DEFAULT_COLOR[0],
@@ -128,7 +128,7 @@ public class Selectable extends Widget{
         float[] noAlphaColor2 = new float[]{WIDGET_DEFAULT_COLOR[1][0], WIDGET_DEFAULT_COLOR[1][1], WIDGET_DEFAULT_COLOR[1][2], 0};
 
 
-        Render.drawGradientRectangle(
+        Render.writeGradientRectangle(
                 this.x + width - (int) Math.round(45 * Window.windowScale),
                 this.y + 1,
                 (int) Math.round(30 * Window.windowScale),
@@ -140,7 +140,7 @@ public class Selectable extends Widget{
                 alpha
         );
 
-        Render.drawTriangle2(
+        Render.writeTriangle2(
                 this.x + width - (int) Math.round(12 * Window.windowScale),
                 this.y + (int) Math.round((float) widgetHeight / 2) - 3,
                 5, 3,
@@ -148,7 +148,7 @@ public class Selectable extends Widget{
                 alpha
         );
 
-        Render.drawTriangle2(
+        Render.writeTriangle2(
                 this.x + width - (int) Math.round(12 * Window.windowScale),
                 this.y + (int) Math.round((float) widgetHeight / 2) - 2,
                 5, 3,
@@ -171,8 +171,8 @@ public class Selectable extends Widget{
         int elementsCount = functionSetting.getOptionsList().size();
         int height = elementsCount * Math.round(18 * Window.windowScale) + 2 * (elementsCount - 1) + 2;
 
-        Render.drawRectangleBorders(this.x, this.y + widgetHeight + 1, width, height, 1, Color.c12, Widget.menuAlpha);
-        Render.drawRectangle(this.x + 1, this.y + widgetHeight + 2, width - 2, height - 2, new float[]{35, 35, 35, 255}, Widget.menuAlpha);
+        Render.writeRectangleBorders(this.x, this.y + widgetHeight + 1, width, height, 1, Color.c12, Widget.menuAlpha);
+        Render.writeRectangle(this.x + 1, this.y + widgetHeight + 2, width - 2, height - 2, new float[]{35, 35, 35, 255}, Widget.menuAlpha);
 
         if(hoveredOption != -1) {
 
@@ -181,7 +181,7 @@ public class Selectable extends Widget{
             int buttonHeight = Math.round(18 * Window.windowScale);
             int buttonY = startY + i * (buttonHeight + 2);
 
-            Render.drawRectangle(
+            Render.writeRectangle(
                     this.x + 1,
                     buttonY,
                     width - 2, buttonHeight, new float[]{25, 25, 25}, Widget.menuAlpha);
